@@ -24,6 +24,7 @@ async function bootstrap() {
       /\.ngrok-free\.dev$/, // ✅ AGREGAR — cualquier subdominio ngrok
       /\.ngrok-free\.app$/, // ✅ AGREGAR — variante .app
       process.env.CORS_ORIGIN || 'https://fenixbd-demo.vercel.app',
+      'https://fenix-system-6frx-git-main-rodr-corp.vercel.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'ngrok-skip-browser-warning'],
