@@ -23,6 +23,7 @@ async function bootstrap() {
       'ionic://localhost', // ✅ AGREGAR — Ionic webview viejo
       /\.ngrok-free\.dev$/, // ✅ AGREGAR — cualquier subdominio ngrok
       /\.ngrok-free\.app$/, // ✅ AGREGAR — variante .app
+      process.env.CORS_ORIGIN || 'https://fenixbd-demo.vercel.app',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'ngrok-skip-browser-warning'],
