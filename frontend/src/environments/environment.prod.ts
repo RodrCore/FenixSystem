@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.fenixbd.com/api',
-  wsUrl: 'https://api.fenixbd.com',
+  apiUrl: 'https://fenixbackend-x8je.onrender.com/api',
+  wsUrl: 'https://fenixbackend-x8je.onrender.com',
 };
