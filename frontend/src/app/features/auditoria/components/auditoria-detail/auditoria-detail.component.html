@@ -1,0 +1,167 @@
+<div class="drawer-backdrop" *ngIf="open" (click)="cerrar()"></div>
+
+<aside class="drawer" [class.open]="open" role="dialog" aria-modal="true">
+
+  <!-- Header -->
+  <div class="drawer-header">
+    <div class="dh-left">
+      <button class="dh-close" (click)="cerrar()" aria-label="Cerrar">
+        <svg fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" viewBox="0 0 24 24" width="18" height="18">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <div>
+        <div class="dh-title">Registro de auditoría</div>
+        <div class="dh-sub" *ngIf="log?.id">
+          <span class="mono">{{ log?.id?.substring(0, 8) }}…</span>
+        </div>
+      </div>
+    </div>
+
+    <span *ngIf="log" class="acc-badge"
+      [style.color]="colorAccion(log.accion)"
+      [style.background]="colorAccion(log.accion) + '18'"
+      [style.border-color]="colorAccion(log.accion) + '40'">
+      {{ log.accion }}
+    </span>
+  </div>
+
+  <!-- Body -->
+  <div class="drawer-body">
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="skeleton-row" style="height: 80px;"></div>
+      <div class="skeleton-row" style="height: 200px; margin-top: 12px;"></div>
+    </div>
+
+    <ng-container *ngIf="!loading && log">
+
+      <!-- Sección: Información general -->
+      <div class="section">
+        <div class="section-title">Información general</div>
+        <div class="info-card">
+          <div class="ic-row">
+            <span class="ic-k">Fecha / Hora</span>
+            <span class="ic-v">
+              {{ log.fecha_hora | date:'dd MMM yyyy, HH:mm:ss':'':'es' }}
+            </span>
+          </div>
+          <div class="ic-row" *ngIf="log.modulo">
+            <span class="ic-k">Módulo</span>
+            <span class="ic-v">{{ log.modulo }}</span>
+          </div>
+          <div class="ic-row" *ngIf="log.tabla_afectada">
+            <span class="ic-k">Tabla afectada</span>
+            <span class="ic-v mono">{{ log.tabla_afectada }}</span>
+          </div>
+          <div class="ic-row" *ngIf="log.registro_id">
+            <span class="ic-k">ID del registro</span>
+            <span class="ic-v mono">{{ log.registro_id }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Usuario -->
+      <div class="section" *ngIf="log.usuario">
+        <div class="section-title">Usuario</div>
+        <div class="info-card">
+          <div class="ic-row">
+            <span class="ic-k">Nombre</span>
+            <span class="ic-v">{{ log.usuario.nombre }}</span>
+          </div>
+          <div class="ic-row" *ngIf="log.usuario.email">
+            <span class="ic-k">Email</span>
+            <span class="ic-v">{{ log.usuario.email }}</span>
+          </div>
+          <div class="ic-row">
+            <span class="ic-k">Rol</span>
+            <span class="ic-v">{{ log.usuario.rol }}</span>
+          </div>
+          <div class="ic-row">
+            <span class="ic-k">ID usuario</span>
+            <span class="ic-v mono">{{ log.usuario.id }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Sesión / Origen -->
+      <div class="section">
+        <div class="section-title">Origen</div>
+        <div class="info-card">
+          <div class="ic-row" *ngIf="log.ip_origen">
+            <span class="ic-k">IP</span>
+            <span class="ic-v mono">{{ log.ip_origen }}</span>
+          </div>
+          <div class="ic-row" *ngIf="log.dispositivo">
+            <span class="ic-k">Dispositivo</span>
+            <span class="ic-v">{{ log.dispositivo }}</span>
+          </div>
+          <div class="ic-row" *ngIf="log.navegador">
+            <span class="ic-k">Navegador</span>
+            <span class="ic-v">{{ log.navegador }}</span>
+          </div>
+          <div class="ic-row" *ngIf="log.sesion_id">
+            <span class="ic-k">Sesión ID</span>
+            <span class="ic-v mono">{{ log.sesion_id.substring(0, 13) }}…</span>
+          </div>
+          <div class="ic-row ic-row-stack" *ngIf="log.user_agent">
+            <span class="ic-k">User-Agent</span>
+            <span class="ic-v ic-v-small">{{ log.user_agent }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Cambios (comparación) -->
+      <div class="section" *ngIf="esComparacion">
+        <div class="section-title">Cambios</div>
+        <div class="cambios-tabla">
+          <div class="ct-row ct-header">
+            <div class="ct-key">Campo</div>
+            <div class="ct-val">Anterior</div>
+            <div class="ct-val">Nuevo</div>
+          </div>
+          <div class="ct-row" *ngFor="let row of getComparacion()"
+            [class.ct-modificado]="row.cambio === 'modificado'"
+            [class.ct-agregado]="row.cambio === 'agregado'"
+            [class.ct-eliminado]="row.cambio === 'eliminado'">
+            <div class="ct-key">{{ row.key }}</div>
+            <div class="ct-val ct-anterior">
+              {{ row.anterior !== null ? row.anterior : '—' }}
+            </div>
+            <div class="ct-val ct-nuevo">
+              {{ row.nuevo !== null ? row.nuevo : '—' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Valor (solo si NO es comparación) -->
+      <div class="section" *ngIf="!esComparacion && log.valor_nuevo">
+        <div class="section-title">Datos</div>
+        <div class="json-box">
+          <div class="json-row" *ngFor="let row of getJsonRows(log.valor_nuevo)">
+            <span class="json-k">{{ row.key }}</span>
+            <span class="json-v">{{ row.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" *ngIf="!esComparacion && log.valor_anterior && !log.valor_nuevo">
+        <div class="section-title">Datos eliminados</div>
+        <div class="json-box danger">
+          <div class="json-row" *ngFor="let row of getJsonRows(log.valor_anterior)">
+            <span class="json-k">{{ row.key }}</span>
+            <span class="json-v">{{ row.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Si no hay datos -->
+      <div *ngIf="!tieneCambios" class="info-card no-data">
+        <p>Este registro no contiene datos adicionales.</p>
+      </div>
+
+    </ng-container>
+  </div>
+</aside>

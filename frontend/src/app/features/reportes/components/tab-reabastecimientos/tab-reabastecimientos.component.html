@@ -1,0 +1,58 @@
+<div class="tab-loading" *ngIf="loading">
+  <div class="skel" style="height:90px"></div>
+  <div class="skel" style="height:280px"></div>
+</div>
+
+<ng-container *ngIf="!loading && data">
+  <div class="kpis-grid">
+    <app-kpi-card
+      label="Total comprado"
+      [value]="'Bs ' + fmtBs(data.kpis.total_comprado)"
+      [variacion]="data.kpis.variacion"
+      color="#7C3AED" />
+    <app-kpi-card
+      label="Órdenes"
+      [value]="data.kpis.cantidad_ordenes"
+      color="#0891B2" />
+    <app-kpi-card
+      label="Proveedores activos"
+      [value]="data.por_proveedor.length"
+      color="#D97706" />
+    <app-kpi-card
+      label="Productos diferentes"
+      [value]="data.productos_mas_comprados.length"
+      color="#059669" />
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Compras por proveedor</div>
+      <div class="chart-wrap"><canvas #chartProveedores></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Órdenes por estado</div>
+      <div class="chart-wrap chart-sm"><canvas #chartEstados></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Productos más comprados</div>
+    <table class="rank-table">
+      <thead>
+        <tr><th>#</th><th>Producto</th><th>Presentación</th><th>Cantidad</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of data.productos_mas_comprados; let i = index">
+          <td class="rank-i">{{ i + 1 }}</td>
+          <td><div class="rank-name">{{ p.producto }}</div></td>
+          <td>{{ p.presentacion }}</td>
+          <td class="td-num">{{ p.cantidad }}</td>
+          <td class="td-money">Bs {{ fmtBs(p.total) }}</td>
+        </tr>
+        <tr *ngIf="data.productos_mas_comprados.length === 0">
+          <td colspan="5" class="empty">Sin datos para este período</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ng-container>

@@ -1,0 +1,338 @@
+<div class="page">
+  <!-- MAPA -->
+  <div class="mapa-section">
+    <app-mapa-repartidores
+      titulo="Repartidores en tiempo real"
+      [pedidos]="pedidosParaMapa"
+      [fullscreen]="mapaFullscreen"
+      (expandir)="abrirMapaFullscreen()"
+      (cerrar)="cerrarMapaFullscreen()"
+    />
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card" style="border-left-color: #2563eb">
+      <div class="stat-val">{{ stats.pendientes }}</div>
+      <div class="stat-lbl">Pendientes</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #0891b2">
+      <div class="stat-val">{{ stats.en_ruta }}</div>
+      <div class="stat-lbl">En ruta</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #059669">
+      <div class="stat-val">{{ stats.entregados_hoy }}</div>
+      <div class="stat-lbl">Entregados hoy</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #dc2626">
+      <div class="stat-val">{{ stats.cancelados }}</div>
+      <div class="stat-lbl">Cancelados</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #e11d48">
+      <div class="stat-val">Bs {{ stats.facturado_hoy | number: '1.2-2' }}</div>
+      <div class="stat-lbl">Facturado hoy</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" [formGroup]="filterForm">
+    <div class="search-wrap">
+      <svg
+        class="search-icon"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        viewBox="0 0 24 24"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+      </svg>
+      <input
+        formControlName="buscar"
+        placeholder="Buscar por número, cliente, repartidor..."
+        class="search-input"
+      />
+    </div>
+
+    <select formControlName="estado" class="filter-sel" (change)="onFilterChange()">
+      <option *ngFor="let e of estadosDisponibles" [value]="e.v">{{ e.n }}</option>
+    </select>
+
+    <input
+      type="date"
+      formControlName="desde"
+      class="filter-sel"
+      (change)="onFilterChange()"
+      placeholder="Desde"
+    />
+
+    <input
+      type="date"
+      formControlName="hasta"
+      class="filter-sel"
+      (change)="onFilterChange()"
+      placeholder="Hasta"
+    />
+
+    <button class="btn btn-ghost" *ngIf="hayFiltrosActivos" (click)="limpiarFiltros()">
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        viewBox="0 0 24 24"
+        width="14"
+        height="14"
+      >
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+      Limpiar
+    </button>
+
+    <div class="spacer"></div>
+
+    <button class="btn btn-primary" (click)="abrirNuevoPedido()">
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+      >
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Nueva venta
+    </button>
+  </div>
+
+  <!-- TABLA -->
+  <div class="table-card">
+    <div *ngIf="loading" class="loading-bar"></div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Pedido</th>
+            <th>Cliente</th>
+            <th>Preventista</th>
+            <th>Repartidor</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of pedidos" (click)="verDetalle(p)" class="row-clickable">
+            <td>
+              <div class="pr-status-bar-mini" [style.background]="estadoColor(p.estado)"></div>
+              <div class="cell-pedido">
+                <div class="pr-num">{{ p.numero_pedido }}</div>
+                <div class="pr-id">#{{ p.id }}</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="cell-cliente">
+                <div class="cl-name">{{ p.cliente?.razon_social ?? '—' }}</div>
+                <div class="cl-meta" *ngIf="p.cliente?.nombre_comercial">
+                  {{ p.cliente.nombre_comercial }}
+                </div>
+              </div>
+            </td>
+
+            <td class="td-muted">
+              <ng-container *ngIf="p.preventista; else dash">
+                {{ p.preventista.nombres }} {{ p.preventista.apellido_paterno }}
+              </ng-container>
+              <ng-template #dash>—</ng-template>
+            </td>
+
+            <td>
+              <ng-container *ngIf="p.repartidor; else sinRep">
+                <span class="td-rep">{{ p.repartidor.nombres }}</span>
+              </ng-container>
+              <ng-template #sinRep>
+                <span class="td-warn" *ngIf="esPendiente(p)">⚠ Sin asignar</span>
+                <span class="td-muted" *ngIf="!esPendiente(p)">—</span>
+              </ng-template>
+            </td>
+
+            <td>
+              <span
+                class="badge"
+                [style.color]="estadoColor(p.estado)"
+                [style.background]="estadoColor(p.estado) + '18'"
+                [style.border-color]="estadoColor(p.estado) + '40'"
+              >
+                {{ p.estado.replace('_', ' ') }}
+              </span>
+            </td>
+
+            <td class="td-muted">
+              <div>{{ p.fecha_creacion | date: 'dd MMM' : '' : 'es' }}</div>
+              <div style="font-size: 10px">{{ p.fecha_creacion | date: 'HH:mm' }}</div>
+            </td>
+
+            <td class="td-total">Bs {{ p.total_monto | number: '1.2-2' }}</td>
+
+            <td>
+              <div class="action-btns">
+                <button
+                  class="act-btn"
+                  title="Ver detalle"
+                  (click)="verDetalle(p); $event.stopPropagation()"
+                >
+                  <svg
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                  >
+                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0" />
+                    <path
+                      d="M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="!loading && pedidos.length === 0">
+            <td colspan="8" class="empty-row">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                width="32"
+                height="32"
+                style="color: var(--color-candy-muted); margin-bottom: 8px"
+              >
+                <path
+                  d="M9 5h-2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-2"
+                />
+                <path
+                  d="M9 3m0 2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"
+                />
+              </svg>
+              <p *ngIf="hayFiltrosActivos">No se encontraron pedidos con esos filtros</p>
+              <p *ngIf="!hayFiltrosActivos">Aún no hay pedidos registrados</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" *ngIf="total > 0">
+      <span class="pag-info">
+        Mostrando {{ desde }}–{{ hasta }} de {{ total | number }} pedidos
+      </span>
+      <div class="pag-nums">
+        <button
+          class="pag-btn pag-arrow"
+          (click)="goPage(page - 1)"
+          [disabled]="page === 1"
+          aria-label="Anterior"
+        >
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
+        <ng-container *ngFor="let n of pageNumbers">
+          <span *ngIf="n === -1" class="pag-ellipsis">…</span>
+          <button
+            *ngIf="n !== -1"
+            class="pag-btn"
+            [class.pag-active]="n === page"
+            (click)="goPage(n)"
+          >
+            {{ n }}
+          </button>
+        </ng-container>
+        <button
+          class="pag-btn pag-arrow"
+          (click)="goPage(page + 1)"
+          [disabled]="page === pages"
+          aria-label="Siguiente"
+        >
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     DRAWER DE DETALLE
+═══════════════════════════════════════════════ -->
+<app-pedido-detail
+  [pedidoId]="pedidoDetalleId"
+  [open]="detalleAbierto"
+  (closed)="cerrarDetalle()"
+  (editRequest)="abrirEditor($event)"
+  (cancelRequest)="pedirCancelarPedido($event)"
+  (deleteRequest)="pedirEliminarPedido($event)"
+/>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL DE EDICIÓN
+═══════════════════════════════════════════════ -->
+<app-pedido-edit
+  *ngIf="pedidoEditando"
+  [pedido]="pedidoEditando"
+  (saved)="onPedidoActualizado($event)"
+  (cancelled)="onEditCancelled()"
+/>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL DE CONFIRMACIÓN
+═══════════════════════════════════════════════ -->
+<app-confirm-action
+  *ngIf="confirmConfig.open"
+  [title]="confirmConfig.title"
+  [message]="confirmConfig.message"
+  [itemName]="confirmConfig.itemName"
+  [confirmLabel]="confirmConfig.confirmLabel"
+  [type]="confirmConfig.type"
+  [askMotivo]="confirmConfig.askMotivo"
+  [requireMotivo]="confirmConfig.requireMotivo"
+  [motivoPlaceholder]="confirmConfig.motivoPlaceholder"
+  [loading]="confirmConfig.loading"
+  (confirmed)="onConfirmConfirmed($event)"
+  (cancelled)="onConfirmCancelled()"
+/>
+
+<app-pedido-nuevo
+  *ngIf="mostrarModalNuevo"
+  (saved)="onPedidoCreado($event)"
+  (cancelled)="cerrarNuevoPedido()"
+/>

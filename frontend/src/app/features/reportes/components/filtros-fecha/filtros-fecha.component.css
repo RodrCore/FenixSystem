@@ -1,0 +1,79 @@
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chips {
+  display: inline-flex;
+  background: var(--color-candy-surface, #FFFFFF);
+  border: 0.5px solid var(--color-candy-border, #E2E8F0);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 2px;
+}
+
+.chip {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-candy-muted, #64748B);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.chip:hover {
+  color: var(--color-candy-text, #0F172A);
+}
+
+.chip-active {
+  background: #E11D48 !important;
+  color: white !important;
+}
+
+.custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-candy-surface, #FFFFFF);
+  border: 0.5px solid var(--color-candy-border, #E2E8F0);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.custom label {
+  font-size: 11px;
+  color: var(--color-candy-muted, #64748B);
+  font-weight: 500;
+}
+
+.custom input[type="date"] {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 0.5px solid var(--color-candy-border, #E2E8F0);
+  background: var(--color-candy-bg, #F8FAFC);
+  color: var(--color-candy-text, #0F172A);
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+}
+
+:host-context(.dark) .chips,
+:host-context(.dark) .custom {
+  background: var(--color-candy-dark-surface, #1E293B);
+  border-color: var(--color-candy-dark-border, #334155);
+}
+
+:host-context(.dark) .custom input[type="date"] {
+  background: var(--color-candy-dark-bg, #0F172A);
+  border-color: var(--color-candy-dark-border, #334155);
+  color: var(--color-candy-dark-text, #F1F5F9);
+  color-scheme: dark;
+}

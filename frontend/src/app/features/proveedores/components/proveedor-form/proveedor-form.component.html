@@ -1,0 +1,197 @@
+<div class="modal-backdrop" (click)="cancelar()"></div>
+
+<div class="modal-form">
+  <!-- HEADER -->
+  <div class="mf-header">
+    <div>
+      <div class="mf-title">{{ esEdicion ? 'Editar proveedor' : 'Nuevo proveedor' }}</div>
+      <div class="mf-sub">
+        {{ esEdicion ? proveedor?.razon_social : 'Registrar un nuevo proveedor' }}
+      </div>
+    </div>
+    <button class="mf-close" (click)="cancelar()" aria-label="Cerrar">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="18" height="18">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- TABS -->
+  <div class="mf-tabs">
+    <button class="tab" [class.tab-active]="seccionActiva === 'basico'"
+      (click)="irSeccion('basico')">Datos básicos</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'contacto'"
+      (click)="irSeccion('contacto')">Contacto</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'ubicacion'"
+      (click)="irSeccion('ubicacion')">Ubicación</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'comercial'"
+      (click)="irSeccion('comercial')">Comercial</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="mf-body" [formGroup]="form">
+
+    <!-- ══ BÁSICO ══ -->
+    <div *ngIf="seccionActiva === 'basico'" class="seccion">
+      <div class="mf-grid-2">
+        <div class="mf-fld mf-fld-full">
+          <label>Razón social <span class="req">*</span></label>
+          <input type="text" formControlName="razon_social" class="mf-input"
+            placeholder="Ej: Distribuidora ABC S.R.L." />
+        </div>
+
+        <div class="mf-fld">
+          <label>Nombre comercial</label>
+          <input type="text" formControlName="nombre_comercial" class="mf-input"
+            placeholder="ABC" />
+        </div>
+
+        <div class="mf-fld">
+          <label>NIT / RFC</label>
+          <input type="text" formControlName="nit_rfc" class="mf-input"
+            placeholder="1234567890" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Estado</label>
+          <select formControlName="activo" class="mf-input">
+            <option [ngValue]="true">Activo</option>
+            <option [ngValue]="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONTACTO ══ -->
+    <div *ngIf="seccionActiva === 'contacto'" class="seccion">
+      <div class="mf-grid-2">
+        <div class="mf-fld mf-fld-full">
+          <label>Nombre de contacto</label>
+          <input type="text" formControlName="contacto_nombres" class="mf-input"
+            placeholder="Juan Pérez" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Teléfono</label>
+          <input type="tel" formControlName="contacto_telefono" class="mf-input"
+            placeholder="71234567" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Email</label>
+          <input type="email" formControlName="contacto_email" class="mf-input"
+            placeholder="contacto@proveedor.com" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ UBICACIÓN ══ -->
+    <div *ngIf="seccionActiva === 'ubicacion'" class="seccion">
+      <div class="mf-fld">
+        <label>Dirección completa</label>
+        <textarea formControlName="direccion_completa" class="mf-input mf-textarea"
+          placeholder="Calle, número, ciudad, departamento..." rows="2"></textarea>
+        <div class="mf-help" *ngIf="geocoding">
+          <span class="loader-mini"></span>
+          Buscando dirección desde el mapa...
+        </div>
+      </div>
+
+      <!-- Botones del mapa -->
+      <div class="mapa-actions">
+        <button type="button" class="mapa-btn" (click)="miUbicacion()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+            <circle cx="12" cy="10" r="3"/>
+            <path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8z"/>
+          </svg>
+          Mi ubicación
+        </button>
+
+        <button type="button" class="mapa-btn" (click)="centrarPotosi()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="4"/>
+            <line x1="12" y1="2" x2="12" y2="6"/>
+            <line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="6" y2="12"/>
+            <line x1="18" y1="12" x2="22" y2="12"/>
+          </svg>
+          Centrar en Potosí
+        </button>
+
+        <button type="button" class="mapa-btn" (click)="quitarUbicacion()"
+          *ngIf="form.value.latitud">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+          Quitar ubicación
+        </button>
+      </div>
+
+      <!-- MAPA -->
+      <div class="mapa-wrap">
+        <div #mapaContainer class="mapa-container"></div>
+      </div>
+
+      <div class="coords" *ngIf="form.value.latitud && form.value.longitud">
+        📍 {{ form.value.latitud | number:'1.6-6' }}, {{ form.value.longitud | number:'1.6-6' }}
+      </div>
+
+      <div class="mf-help">
+        💡 Click en el mapa o arrastra el marker para fijar la ubicación.
+        La dirección se completa automáticamente.
+      </div>
+    </div>
+
+    <!-- ══ COMERCIAL ══ -->
+    <div *ngIf="seccionActiva === 'comercial'" class="seccion">
+      <div class="mf-grid-2">
+        <div class="mf-fld">
+          <label>Días de entrega</label>
+          <input type="text" formControlName="dias_entrega" class="mf-input"
+            placeholder="Ej: Lunes y Jueves" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Condiciones de pago</label>
+          <input type="text" formControlName="condiciones_pago" class="mf-input"
+            placeholder="Ej: 30 días, Contado" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Notas</label>
+          <textarea formControlName="notas" class="mf-input mf-textarea"
+            placeholder="Información adicional, descuentos, etc..." rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-msg" *ngIf="errorMsg">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      {{ errorMsg }}
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="mf-footer">
+    <button class="btn btn-ghost" (click)="cancelar()" [disabled]="guardando">
+      Cancelar
+    </button>
+    <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M5 12l5 5l10-10"/>
+      </svg>
+      {{ guardando ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Crear proveedor') }}
+    </button>
+  </div>
+</div>

@@ -1,0 +1,400 @@
+<!-- Overlay oscurecido -->
+<div class="drawer-backdrop" *ngIf="open" (click)="cerrar()"></div>
+
+<!-- Drawer lateral derecho -->
+<aside class="drawer" [class.open]="open" role="dialog" aria-modal="true">
+  <!-- Header -->
+  <div class="drawer-header">
+    <div class="dh-left">
+      <button class="dh-close" (click)="cerrar()" aria-label="Cerrar">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+        >
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+      <div>
+        <div class="dh-title">{{ nombreCompleto || 'Cargando...' }}</div>
+        <div class="dh-sub">Detalle del usuario</div>
+      </div>
+    </div>
+
+    <span
+      *ngIf="usuario"
+      class="dh-badge"
+      [class.activo]="usuario.estado && !estaEliminado"
+      [class.inactivo]="!usuario.estado && !estaEliminado"
+      [class.eliminado]="estaEliminado"
+    >
+      {{ estaEliminado ? 'Eliminado' : usuario.estado ? 'Activo' : 'Inactivo' }}
+    </span>
+  </div>
+
+  <!-- Body -->
+  <div class="drawer-body">
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <div class="skeleton-row" style="height: 90px"></div>
+      <div class="skeleton-row" style="height: 200px; margin-top: 12px"></div>
+    </div>
+
+    <ng-container *ngIf="!loading && usuario">
+      <!-- ELIMINADO BANNER -->
+      <div *ngIf="estaEliminado" class="banner-danger">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+        >
+          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        </svg>
+        <div>
+          <div><strong>Usuario eliminado definitivamente</strong></div>
+          <div style="font-size: 11px; margin-top: 2px">
+            {{ usuario.deleted_at | date: 'dd MMM yyyy HH:mm' : '' : 'es' }}
+            <span *ngIf="usuario.eliminador">
+              por {{ usuario.eliminador.nombres }} {{ usuario.eliminador.apellido_paterno }}
+            </span>
+          </div>
+          <div
+            style="font-size: 11px; margin-top: 4px; opacity: 0.85"
+            *ngIf="usuario.motivo_eliminacion"
+          >
+            Motivo: {{ usuario.motivo_eliminacion }}
+          </div>
+        </div>
+      </div>
+
+      <!-- INACTIVO BANNER (sin eliminar) -->
+      <div *ngIf="!estaEliminado && !usuario.estado" class="banner-warning">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <div>
+          <div><strong>Usuario desactivado</strong></div>
+          <div style="font-size: 11px; margin-top: 2px">
+            No puede iniciar sesión. Puede ser reactivado o eliminado definitivamente.
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOQUEADO BANNER -->
+      <div *ngIf="estaBloqueado" class="banner-warning">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+        >
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <div>
+          <div><strong>Cuenta bloqueada temporalmente</strong></div>
+          <div style="font-size: 11px; margin-top: 2px">
+            Hasta: {{ usuario.bloqueado_hasta | date: 'dd MMM yyyy HH:mm' : '' : 'es' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- HEADER USUARIO -->
+      <div class="user-header">
+        <div class="user-avatar" [style.background]="colorRol(usuario.rol?.nombre)">
+          {{ iniciales }}
+        </div>
+        <div class="user-info">
+          <div class="user-name">{{ nombreCompleto }}</div>
+          <span
+            class="badge-rol"
+            [style.color]="colorRol(usuario.rol?.nombre)"
+            [style.background]="colorRol(usuario.rol?.nombre) + '18'"
+            [style.border-color]="colorRol(usuario.rol?.nombre) + '40'"
+          >
+            {{ usuario.rol?.nombre }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Acciones rápidas -->
+      <div class="quick-actions" *ngIf="!estaEliminado">
+        <button class="qa-btn" (click)="llamar()" *ngIf="usuario.telefono">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+          >
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+            />
+          </svg>
+          Llamar
+        </button>
+
+        <button class="qa-btn" (click)="enviarEmail()">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+          >
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+          Email
+        </button>
+      </div>
+
+      <!-- DATOS PERSONALES -->
+      <div class="section">
+        <div class="section-title">Datos personales</div>
+        <div class="info-card">
+          <div class="ic-row">
+            <span class="ic-k">Nombres</span>
+            <span class="ic-v">{{ usuario.nombres }}</span>
+          </div>
+          <div class="ic-row">
+            <span class="ic-k">Apellidos</span>
+            <span class="ic-v">
+              {{ usuario.apellido_paterno }}
+              <span *ngIf="usuario.apellido_materno"> {{ usuario.apellido_materno }}</span>
+            </span>
+          </div>
+          <div class="ic-row" *ngIf="usuario.ci">
+            <span class="ic-k">CI / Documento</span>
+            <span class="ic-v">{{ usuario.ci }}</span>
+          </div>
+          <div class="ic-row">
+            <span class="ic-k">Email</span>
+            <a class="ic-v link" [href]="'mailto:' + usuario.email">
+              {{ usuario.email }}
+            </a>
+          </div>
+          <div class="ic-row" *ngIf="usuario.telefono">
+            <span class="ic-k">Teléfono</span>
+            <a class="ic-v link" [href]="'tel:' + usuario.telefono">
+              {{ usuario.telefono }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- DATOS LABORALES -->
+      <div
+        class="section"
+        *ngIf="usuario.numero_empleado || usuario.fecha_contratacion || usuario.salario_base"
+      >
+        <div class="section-title">Datos laborales</div>
+        <div class="info-card">
+          <div class="ic-row" *ngIf="usuario.numero_empleado">
+            <span class="ic-k">N° de empleado</span>
+            <span class="ic-v">{{ usuario.numero_empleado }}</span>
+          </div>
+          <div class="ic-row" *ngIf="usuario.fecha_contratacion">
+            <span class="ic-k">Fecha contratación</span>
+            <span class="ic-v">{{
+              usuario.fecha_contratacion | date: 'dd MMM yyyy' : '' : 'es'
+            }}</span>
+          </div>
+          <div class="ic-row" *ngIf="usuario.salario_base">
+            <span class="ic-k">Salario base</span>
+            <span class="ic-v">Bs {{ usuario.salario_base | number: '1.2-2' }}</span>
+          </div>
+          <div class="ic-row" *ngIf="usuario.comision_porcentaje">
+            <span class="ic-k">Comisión</span>
+            <span class="ic-v">{{ usuario.comision_porcentaje }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEGURIDAD -->
+      <div class="section">
+        <div class="section-title">Seguridad de la cuenta</div>
+        <div class="info-card">
+          <div class="ic-row">
+            <span class="ic-k">Último acceso</span>
+            <span class="ic-v">
+              <ng-container *ngIf="usuario.ultimo_acceso; else nunca">
+                {{ usuario.ultimo_acceso | date: 'dd MMM yyyy HH:mm' : '' : 'es' }}
+              </ng-container>
+              <ng-template #nunca>
+                <span class="text-muted">Nunca ha ingresado</span>
+              </ng-template>
+            </span>
+          </div>
+          <div class="ic-row" *ngIf="usuario.ultima_ip">
+            <span class="ic-k">Última IP</span>
+            <span class="ic-v" style="font-family: monospace; font-size: 11.5px">
+              {{ usuario.ultima_ip }}
+            </span>
+          </div>
+          <div class="ic-row">
+            <span class="ic-k">Intentos fallidos</span>
+            <span class="ic-v" [class.text-warn]="tieneIntentosFallidos">
+              {{ usuario.intentos_fallidos_login ?? 0 }}
+            </span>
+          </div>
+          <div class="ic-row" *ngIf="usuario.password_temporal">
+            <span class="ic-k">Password</span>
+            <span class="ic-v text-warn">Temporal (debe cambiarla)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FECHAS -->
+      <div class="section">
+        <div class="section-title">Fechas</div>
+        <div class="info-card">
+          <div class="ic-row" *ngIf="usuario.created_at">
+            <span class="ic-k">Registrado</span>
+            <span class="ic-v">{{ usuario.created_at | date: 'dd MMM yyyy' : '' : 'es' }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Footer con botones -->
+  <div class="drawer-footer" *ngIf="!loading && usuario">
+    <!-- Si el usuario ESTÁ ELIMINADO: solo botón restaurar -->
+    <button class="btn btn-success" *ngIf="puedeRestaurar" (click)="onRestaurar()">
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+      >
+        <path d="M3 12a9 9 0 1 0 9-9" />
+        <polyline points="3 4 3 12 11 12" />
+      </svg>
+      Restaurar usuario
+    </button>
+
+    <!-- Si NO está eliminado: editar, resetear password, activar/desactivar -->
+    <button class="btn btn-secondary" *ngIf="puedeEditar" (click)="onEditar()">
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+      >
+        <path d="M7 7h-1a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+        <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97l-8.415 8.385v3h3l8.385-8.415z" />
+      </svg>
+      Editar
+    </button>
+
+    <button class="btn btn-warning" *ngIf="puedeResetearPassword" (click)="onResetPassword()">
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+      >
+        <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8" />
+        <path d="M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16" />
+      </svg>
+      Resetear password
+    </button>
+
+    <!-- Activar / Desactivar -->
+    <button
+      class="btn"
+      *ngIf="puedeToggleActive"
+      [class.btn-toggle-on]="!estaActivo"
+      [class.btn-toggle-off]="estaActivo"
+      (click)="onToggleActive()"
+    >
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+      >
+        <path *ngIf="estaActivo" d="M18.36 6.64A9 9 0 0 1 20.77 15" />
+        <path *ngIf="estaActivo" d="M6.16 6.16a9 9 0 1 0 12.68 12.68" />
+        <path *ngIf="estaActivo" d="M12 2v4" />
+        <line *ngIf="estaActivo" x1="2" y1="2" x2="22" y2="22" />
+        <path *ngIf="!estaActivo" d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+        <path *ngIf="!estaActivo" d="M12 2v10" />
+      </svg>
+      {{ textoToggleActive }}
+    </button>
+
+    <!-- Eliminar (solo SUPER_ADMIN, solo si está inactivo) -->
+    <button class="btn btn-danger" *ngIf="puedeEliminar" (click)="onEliminar()">
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+      >
+        <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      </svg>
+      Eliminar
+    </button>
+
+    <!-- Hint: si está activo y soy SUPER_ADMIN, indicar que debe desactivar primero -->
+    <div
+      class="hint-eliminar"
+      *ngIf="esSuperAdmin && estaActivo && !usuarioEsSuperAdmin && !esYoMismo"
+    >
+      <small>💡 Para eliminar, primero desactiva al usuario.</small>
+    </div>
+  </div>
+</aside>

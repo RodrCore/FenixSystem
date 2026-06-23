@@ -1,0 +1,172 @@
+<app-navbar titulo="Ruta de entregas" [mostrarBack]="true" />
+
+<ion-content [fullscreen]="true">
+  <!-- Mapa pantalla completa -->
+  <div id="mapa-entregas" class="mapa-fullscreen-content"></div>
+
+  <!-- Panel de info de ruta (visible cuando hay ruta activa) -->
+  <div class="mapa-info-panel" *ngIf="rutaInfo">
+    <div class="mip-item">
+      <svg
+        fill="none"
+        stroke="#E11D48"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+        <path
+          d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+        />
+      </svg>
+      <span>{{ rutaInfo.distancia }}</span>
+    </div>
+    <div class="mip-divider"></div>
+    <div class="mip-item">
+      <svg
+        fill="none"
+        stroke="#059669"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 3" />
+      </svg>
+      <span>{{ rutaInfo.duracion }}</span>
+    </div>
+    <div class="mip-divider"></div>
+    <div class="mip-item">
+      <svg
+        fill="none"
+        stroke="#2563EB"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+        <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+        <path d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2" />
+      </svg>
+      <span>{{ entregas.length }}</span>
+    </div>
+  </div>
+  <!-- Botón flotante para volver a centrar el mapa en mi ubicación -->
+  <button
+    class="btn-centrar-en-mi"
+    *ngIf="rutaActiva && mostrarBotonSeguir"
+    (click)="centrarEnMi()"
+    aria-label="Centrar en mi ubicación"
+  >
+    <svg
+      fill="none"
+      stroke="white"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path
+        d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+      />
+    </svg>
+  </button>
+  <!-- Botón iniciar ruta (solo si no hay ruta activa) -->
+  <button
+    class="btn-iniciar-ruta"
+    *ngIf="entregas.length && !rutaActiva && !loading"
+    (click)="iniciarRuta()"
+  >
+    <svg
+      fill="none"
+      stroke="white"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden="true"
+    >
+      <polygon points="3 11 22 2 13 21 11 13 3 11" />
+    </svg>
+    Iniciar ruta optimizada
+  </button>
+  <button class="btn-terminar-ruta" *ngIf="rutaActiva" (click)="terminarRuta()">
+    <svg
+      fill="none"
+      stroke="white"
+      stroke-width="2"
+      stroke-linecap="round"
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+    >
+      <rect x="6" y="6" width="12" height="12" rx="1" />
+    </svg>
+    Terminar ruta
+  </button>
+
+  <!-- Strip horizontal con orden de entregas -->
+  <div class="entregas-strip" *ngIf="entregas.length && !loading">
+    <div
+      class="es-item"
+      *ngFor="let p of entregas; let i = index"
+      (click)="centrarEn(p)"
+    >
+      <div class="es-num">{{ i + 1 }}</div>
+      <div class="es-info">
+        <div class="es-cliente">{{ p.cliente?.razon_social }}</div>
+        <div class="es-total">Bs {{ p.total | number:'1.2-2' }}</div>
+      </div>
+      <button
+        class="es-nav-btn"
+        (click)="navegar(p, $event)"
+        aria-label="Navegar con Google Maps"
+      >
+        <svg
+          fill="none"
+          stroke="white"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          aria-hidden="true"
+        >
+          <polygon points="3 11 22 2 13 21 11 13 3 11" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading inicial -->
+  <div class="mapa-loading" *ngIf="loading">
+    <div class="ml-spinner"></div>
+    <span>Cargando entregas...</span>
+  </div>
+
+  <!-- Sin entregas con GPS -->
+  <div class="mapa-empty" *ngIf="!loading && !entregas.length">
+    <p>No hay entregas con ubicación GPS</p>
+    <p class="me-sub">
+      Los clientes deben tener registrada su ubicación en el mapa
+    </p>
+  </div>
+</ion-content>

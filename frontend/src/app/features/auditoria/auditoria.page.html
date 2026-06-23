@@ -1,0 +1,223 @@
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card" style="border-left-color:#2563EB">
+      <div class="stat-val">{{ stats.total_periodo | number }}</div>
+      <div class="stat-lbl">Total registros (período)</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#E11D48">
+      <div class="stat-val">{{ stats.acciones_hoy | number }}</div>
+      <div class="stat-lbl">Acciones hoy</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#059669">
+      <div class="stat-val">{{ stats.usuarios_activos_hoy | number }}</div>
+      <div class="stat-lbl">Usuarios activos hoy</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#7C3AED">
+      <div class="stat-val" style="font-size:15px;font-weight:600">
+        {{ stats.modulo_mas_activo }}
+      </div>
+      <div class="stat-lbl">
+        Módulo más activo
+        <span *ngIf="stats.modulo_mas_activo_count">
+          ({{ stats.modulo_mas_activo_count | number }})
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" [formGroup]="filterForm">
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input formControlName="buscar"
+        placeholder="Buscar por tabla o ID de registro..."
+        class="search-input" />
+    </div>
+
+    <select formControlName="usuario_id" class="filter-sel" (change)="onFilterChange()">
+      <option value="">Todos los usuarios</option>
+      <option *ngFor="let u of filtrosOpciones.usuarios" [value]="u.id">
+        {{ u.nombre }} ({{ u.rol }})
+      </option>
+    </select>
+
+    <select formControlName="modulo" class="filter-sel" (change)="onFilterChange()">
+      <option value="">Todos los módulos</option>
+      <option *ngFor="let m of filtrosOpciones.modulos" [value]="m">{{ m }}</option>
+    </select>
+
+    <select formControlName="accion" class="filter-sel" (change)="onFilterChange()">
+      <option value="">Todas las acciones</option>
+      <option *ngFor="let a of filtrosOpciones.acciones" [value]="a">{{ a }}</option>
+    </select>
+
+    <input formControlName="ip" placeholder="IP..." class="filter-sel" style="width:130px" />
+
+    <input type="date" formControlName="desde" class="filter-sel"
+      (change)="onFilterChange()" title="Desde" />
+    <input type="date" formControlName="hasta" class="filter-sel"
+      (change)="onFilterChange()" title="Hasta" />
+
+    <button class="btn btn-ghost" *ngIf="hayFiltrosActivos" (click)="limpiarFiltros()">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+      Limpiar
+    </button>
+
+    <div class="spacer"></div>
+
+    <label class="toggle">
+      <input type="checkbox" [checked]="verTodo" (change)="toggleVerTodo()" />
+      <span>Incluir antiguos (&gt;90 días)</span>
+    </label>
+
+    <button class="btn btn-excel" (click)="exportar()" [disabled]="exporting">
+      <svg fill="none" stroke="currentColor" stroke-width="1.75"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      {{ exporting ? 'Exportando...' : 'Excel' }}
+    </button>
+  </div>
+
+  <!-- TABLA -->
+  <div class="table-card">
+    <div *ngIf="loading" class="loading-bar"></div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Fecha / Hora</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Módulo</th>
+            <th>Tabla / Registro</th>
+            <th>IP</th>
+            <th class="th-actions">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs" (click)="verDetalle(log)" class="row-clickable">
+            <td class="td-fecha">
+              <div>{{ log.fecha_hora | date:'dd MMM yyyy':'':'es' }}</div>
+              <div class="muted">{{ log.fecha_hora | date:'HH:mm:ss':'':'es' }}</div>
+            </td>
+
+            <td>
+              <div class="cell-user">
+                <div class="avatar" [style.background]="colorPorId(log.usuario_id)">
+                  {{ iniciales(log.usuario_nombre) }}
+                </div>
+                <div>
+                  <div class="user-name">{{ log.usuario_nombre }}</div>
+                  <div class="user-rol" [style.color]="colorRol(log.usuario_rol)">
+                    {{ log.usuario_rol }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <span class="badge-action"
+                [style.color]="colorAccion(log.accion)"
+                [style.background]="colorAccion(log.accion) + '18'"
+                [style.border-color]="colorAccion(log.accion) + '40'">
+                {{ log.accion }}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge-modulo" *ngIf="log.modulo">{{ log.modulo }}</span>
+              <span class="muted" *ngIf="!log.modulo">—</span>
+            </td>
+
+            <td>
+              <div *ngIf="log.tabla_afectada">
+                <span class="mono">{{ log.tabla_afectada }}</span>
+                <div class="muted" *ngIf="log.registro_id">
+                  ID: {{ log.registro_id }}
+                </div>
+              </div>
+              <span class="muted" *ngIf="!log.tabla_afectada">—</span>
+            </td>
+
+            <td class="mono td-muted">{{ log.ip_origen || '—' }}</td>
+
+            <td>
+              <button class="act-btn" title="Ver detalle"
+                (click)="verDetalle(log); $event.stopPropagation()">
+                <svg fill="none" stroke="currentColor" stroke-width="1.75"
+                  stroke-linecap="round" stroke-linejoin="round"
+                  viewBox="0 0 24 24" width="15" height="15">
+                  <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/>
+                  <path d="M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!loading && logs.length === 0">
+            <td colspan="7" class="empty-row">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5"
+                viewBox="0 0 24 24" width="32" height="32"
+                style="color:var(--color-candy-muted);margin-bottom:8px">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              <p *ngIf="hayFiltrosActivos">No se encontraron registros con esos filtros</p>
+              <p *ngIf="!hayFiltrosActivos">Aún no hay registros de auditoría</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="total > 0">
+      <span class="pag-info">
+        Mostrando {{ desde }}–{{ hasta }} de {{ total | number }} registros
+      </span>
+      <div class="pag-nums">
+        <button class="pag-btn pag-arrow" (click)="goPage(page - 1)"
+          [disabled]="page === 1" aria-label="Anterior">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+        <ng-container *ngFor="let n of pageNumbers">
+          <span *ngIf="n === -1" class="pag-ellipsis">…</span>
+          <button *ngIf="n !== -1" class="pag-btn"
+            [class.pag-active]="n === page" (click)="goPage(n)">
+            {{ n }}
+          </button>
+        </ng-container>
+        <button class="pag-btn pag-arrow" (click)="goPage(page + 1)"
+          [disabled]="page === pages" aria-label="Siguiente">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER DETALLE -->
+<app-auditoria-detail
+  [logId]="logDetalleId"
+  [open]="detalleAbierto"
+  (closed)="cerrarDetalle()"
+/>

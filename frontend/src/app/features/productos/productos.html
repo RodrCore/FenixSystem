@@ -1,0 +1,222 @@
+<!-- src/app/features/productos/productos.html -->
+
+<!-- Overlay modales -->
+<div *ngIf="showForm" class="modal-overlay" (click)="closeForm()"></div>
+<div *ngIf="showDetail" class="modal-overlay" (click)="closeDetail()"></div>
+
+<div class="prod-page">
+
+  <!-- ══ STATS ══ -->
+  <div class="stats-grid">
+    <div class="stat-card" style="border-left-color:#2563EB">
+      <div class="stat-val">{{ stats.total }}</div>
+      <div class="stat-lbl">Total productos</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#059669">
+      <div class="stat-val">{{ stats.activos }}</div>
+      <div class="stat-lbl">Activos</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#D97706">
+      <div class="stat-val">{{ stats.porVencer }}</div>
+      <div class="stat-lbl">Por vencer (&lt;30 días)</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#DC2626">
+      <div class="stat-val">{{ stats.sinStock }}</div>
+      <div class="stat-lbl">Sin stock</div>
+    </div>
+  </div>
+
+  <!-- ══ TOOLBAR ══ -->
+  <div class="toolbar" [formGroup]="filterForm">
+
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input formControlName="buscar" placeholder="Buscar por nombre, código, marca..." class="search-input" />
+    </div>
+
+    <select formControlName="categoria_id" class="filter-sel" (change)="onSelectChange()">
+      <option value="">Todas las categorías</option>
+      <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
+    </select>
+
+    <select formControlName="activo" class="filter-sel" (change)="onSelectChange()">
+      <option value="">Todos los estados</option>
+      <option value="true">Activos</option>
+      <option value="false">Inactivos</option>
+    </select>
+
+    <div class="spacer"></div>
+
+    <button class="btn btn-primary" (click)="openAdd()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo producto
+    </button>
+  </div>
+
+  <!-- ══ TABLA ══ -->
+  <div class="table-card">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-bar"></div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="th-check"><input type="checkbox" [checked]="allChecked" (change)="toggleAll()" /></th>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Marca</th>
+            <th>Stock</th>
+            <th>Precio compra</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of productos" [class.row-inactive]="!p.activo">
+
+            <!-- Check -->
+            <td class="td-check">
+              <input type="checkbox" [checked]="checked.has(p.id)" (change)="toggleCheck(p.id)" />
+            </td>
+
+            <!-- Nombre -->
+            <td>
+              <div class="cell-name">
+                <div class="avatar" [style.background]="avatarColor(p.nombre)">
+                  {{ initials(p.nombre) }}
+                </div>
+                <div>
+                  <div class="prod-name" [class.inactive-text]="!p.activo">{{ p.nombre }}</div>
+                  <div class="prod-code">{{ p.codigo_interno }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Categoría -->
+            <td class="td-muted">{{ p.categoria?.nombre || '—' }}</td>
+
+            <!-- Marca -->
+            <td class="td-main">{{ p.marca || '—' }}</td>
+
+            <!-- Stock -->
+            <td>
+              <div class="stock-val" [style.color]="stockColor(p)">
+                {{ (p.stock_total ?? 0) | number }} uds
+              </div>
+              <div class="stock-bar">
+                <div class="stock-fill" [style.width.%]="stockPct(p)" [style.background]="stockColor(p)"></div>
+              </div>
+            </td>
+
+            <!-- Precio -->
+            <td class="td-price">
+              Bs {{ p.precio_compra_promedio | number:'1.2-2' }}
+            </td>
+
+            <!-- Estado badge -->
+            <td>
+              <ng-container *ngIf="!p.activo">
+                <span class="badge badge-off">Inactivo</span>
+              </ng-container>
+              <ng-container *ngIf="p.activo && (p.stock_total ?? 0) === 0">
+                <span class="badge badge-danger">Sin stock</span>
+              </ng-container>
+              <ng-container *ngIf="p.activo && (p.stock_total ?? 0) > 0 && (p.stock_total ?? 0) < p.stock_minimo">
+                <span class="badge badge-warning">Stock bajo</span>
+              </ng-container>
+              <ng-container *ngIf="p.activo && (p.stock_total ?? 0) >= p.stock_minimo">
+                <span class="badge badge-success">Activo</span>
+              </ng-container>
+            </td>
+            <!-- Acciones -->
+            <td>
+              <div class="action-btns">
+                <button class="act-btn" title="Ver detalle" (click)="openDetail(p)">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/>
+                  </svg>
+                </button>
+                <button class="act-btn" title="Editar" (click)="openEdit(p)">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/>
+                  </svg>
+                </button>
+                <button class="act-btn" [class.act-btn-danger]="p.activo" [class.act-btn-success]="!p.activo"
+                  [title]="p.activo ? 'Desactivar' : 'Activar'" (click)="toggleActive(p)">
+                  <svg *ngIf="p.activo" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                    <path d="M12 3a4 4 0 0 1 4 4v4a4 4 0 0 1 -8 0v-4a4 4 0 0 1 4 -4"/><path d="M6.6 16.6a9 9 0 1 0 10.8 0"/>
+                  </svg>
+                  <svg *ngIf="!p.activo" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                    <path d="M12 3a4 4 0 0 1 4 4v4a4 4 0 0 1 -8 0v-4a4 4 0 0 1 4 -4"/><path d="M6 17.6a9 9 0 1 0 12 0"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="!loading && productos.length === 0">
+            <td colspan="8" class="empty-row">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="32" height="32" style="color:var(--color-candy-muted);margin-bottom:8px" aria-hidden="true">
+                <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/>
+              </svg>
+              <p>No se encontraron productos</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" *ngIf="total > 0">
+      <span class="pag-info">
+        Mostrando {{ desde }}–{{ hasta }} de {{ total | number }} productos
+      </span>
+      <div class="pag-nums">
+        <button class="pag-btn pag-arrow" (click)="goPage(page - 1)" [disabled]="page === 1" aria-label="Anterior">
+          <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <ng-container *ngFor="let n of pageNumbers">
+          <span *ngIf="n === -1" class="pag-ellipsis">…</span>
+          <button *ngIf="n !== -1" class="pag-btn" [class.pag-active]="n === page" (click)="goPage(n)">{{ n }}</button>
+        </ng-container>
+        <button class="pag-btn pag-arrow" (click)="goPage(page + 1)" [disabled]="page === pages" aria-label="Siguiente">
+          <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══ MODAL FORM (agregar / editar) ══ -->
+<app-producto-form
+  *ngIf="showForm"
+  [producto]="editando"
+  (close)="closeForm()"
+  (saved)="onSaved()"
+/>
+
+<!-- ══ MODAL DETALLE ══ -->
+<app-producto-detail
+  *ngIf="showDetail && detalle"
+  [producto]="detalle"
+  (close)="closeDetail()"
+  (loteAdded)="onLoteAdded()"
+  (editRequest)="openEdit($event)"
+/>
+
+<!-- ══ DIÁLOGO DE CONFIRMACIÓN ══ -->
+<app-confirm-dialog
+  *ngIf="showConfirm"
+  [title]="confirmTitle"
+  [message]="confirmMessage"
+  [itemName]="confirmItemName"
+  [confirmLabel]="confirmLabel"
+  [type]="confirmType"
+  (confirmed)="onConfirmToggle()"
+  (cancelled)="onCancelConfirm()"
+/>

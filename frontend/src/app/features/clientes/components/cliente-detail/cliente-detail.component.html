@@ -1,0 +1,281 @@
+<!-- Overlay oscurecido -->
+<div class="drawer-backdrop" *ngIf="open" (click)="cerrar()"></div>
+
+<!-- Drawer lateral derecho -->
+<aside class="drawer" [class.open]="open" role="dialog" aria-modal="true">
+
+  <!-- Header -->
+  <div class="drawer-header">
+    <div class="dh-left">
+      <button class="dh-close" (click)="cerrar()" aria-label="Cerrar">
+        <svg fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" viewBox="0 0 24 24" width="18" height="18">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <div>
+        <div class="dh-title">{{ cliente?.razon_social ?? 'Cargando...' }}</div>
+        <div class="dh-sub">Detalle del cliente</div>
+      </div>
+    </div>
+
+    <span *ngIf="cliente" class="dh-badge"
+      [class.activo]="cliente.estado === 'Activo'"
+      [class.inactivo]="cliente.estado === 'Inactivo'">
+      {{ cliente.estado }}
+    </span>
+  </div>
+
+  <!-- Body -->
+  <div class="drawer-body">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <div class="skeleton-row" style="height: 60px;"></div>
+      <div class="skeleton-row" style="height: 200px; margin-top: 12px;"></div>
+      <div class="skeleton-row" style="height: 120px; margin-top: 12px;"></div>
+    </div>
+
+    <ng-container *ngIf="!loading && cliente">
+
+      <!-- ELIMINADO BANNER -->
+      <div *ngIf="cliente.deleted_at" class="banner-danger">
+        <svg fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" viewBox="0 0 24 24" width="16" height="16">
+          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        </svg>
+        <div>
+          <div><strong>Cliente dado de baja</strong></div>
+          <div style="font-size: 11px; margin-top: 2px">
+            {{ cliente.deleted_at | date:'dd MMM yyyy HH:mm':'':'es' }}
+            <span *ngIf="cliente.eliminador">
+              por {{ cliente.eliminador.nombres }} {{ cliente.eliminador.apellido_paterno }}
+            </span>
+          </div>
+          <div style="font-size: 11px; margin-top: 4px; opacity: 0.85" *ngIf="cliente.motivo_eliminacion">
+            Motivo: {{ cliente.motivo_eliminacion }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones rápidas -->
+      <div class="quick-actions" *ngIf="!cliente.deleted_at">
+        <button class="qa-btn" (click)="llamar()" *ngIf="cliente.contacto_telefono">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          Llamar
+        </button>
+
+        <button class="qa-btn qa-wa" (click)="whatsapp()"
+          *ngIf="cliente.contacto_whatsapp || cliente.contacto_telefono">
+          <svg fill="currentColor" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.523.146-.181.194-.301.297-.496.1-.21.049-.375-.025-.524-.075-.15-.672-1.62-.922-2.206-.24-.584-.487-.51-.672-.51-.172-.015-.371-.015-.571-.015-.2 0-.523.074-.797.359-.273.3-1.045 1.02-1.045 2.475s1.07 2.865 1.219 3.075c.149.195 2.105 3.195 5.1 4.485.714.3 1.27.48 1.704.629.714.227 1.365.195 1.88.121.574-.091 1.767-.721 2.016-1.426.255-.704.255-1.29.18-1.425-.074-.135-.27-.21-.57-.345m-5.446 7.443h-.016c-1.77 0-3.524-.48-5.055-1.38l-.36-.214-3.75.975 1.005-3.645-.239-.375a9.869 9.869 0 0 1-1.516-5.26c.002-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.334.101 11.893c0 2.096.549 4.14 1.595 5.945L0 24l6.335-1.652a11.882 11.882 0 0 0 5.71 1.447h.006c6.585 0 11.946-5.336 11.949-11.896 0-3.176-1.24-6.165-3.495-8.411"/>
+          </svg>
+          WhatsApp
+        </button>
+      </div>
+
+      <!-- ══ DATOS DEL NEGOCIO ══ -->
+      <div class="section">
+        <div class="section-title">Datos del negocio</div>
+        <div class="info-card">
+          <div class="ic-row">
+            <span class="ic-k">Razón social</span>
+            <span class="ic-v">{{ cliente.razon_social }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.nombre_comercial">
+            <span class="ic-k">Nombre comercial</span>
+            <span class="ic-v">{{ cliente.nombre_comercial }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.nit_rfc">
+            <span class="ic-k">NIT / RFC</span>
+            <span class="ic-v">{{ cliente.nit_rfc }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.tipo_cliente">
+            <span class="ic-k">Tipo</span>
+            <span class="ic-v">{{ cliente.tipo_cliente }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.regimen_fiscal">
+            <span class="ic-k">Régimen fiscal</span>
+            <span class="ic-v">{{ cliente.regimen_fiscal }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONTACTO ══ -->
+      <div class="section">
+        <div class="section-title">Contacto</div>
+        <div class="info-card">
+          <div class="ic-row">
+            <span class="ic-k">Persona contacto</span>
+            <span class="ic-v">{{ nombreContacto }}</span>
+          </div>
+          <div class="ic-row">
+            <span class="ic-k">Teléfono</span>
+            <a class="ic-v link" [href]="'tel:' + cliente.contacto_telefono">
+              {{ cliente.contacto_telefono }}
+            </a>
+          </div>
+          <div class="ic-row" *ngIf="cliente.contacto_whatsapp">
+            <span class="ic-k">WhatsApp</span>
+            <span class="ic-v">{{ cliente.contacto_whatsapp }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.contacto_email">
+            <span class="ic-k">Email</span>
+            <a class="ic-v link" [href]="'mailto:' + cliente.contacto_email">
+              {{ cliente.contacto_email }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ DIRECCIÓN + MAPA ══ -->
+      <div class="section">
+        <div class="section-title">Ubicación</div>
+        <div class="info-card">
+          <div class="ic-row" *ngIf="direccionCompleta !== '—'">
+            <span class="ic-k">Dirección</span>
+            <span class="ic-v">{{ direccionCompleta }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.direccion_referencias">
+            <span class="ic-k">Referencias</span>
+            <span class="ic-v">{{ cliente.direccion_referencias }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.direccion_codigo_postal">
+            <span class="ic-k">Código postal</span>
+            <span class="ic-v">{{ cliente.direccion_codigo_postal }}</span>
+          </div>
+        </div>
+
+        <!-- MAPA -->
+        <div *ngIf="tienesCoordenadas" class="mapa-container">
+          <div id="cliente-map" class="cliente-map"></div>
+          <button class="btn-google" (click)="abrirEnGoogleMaps()">
+            <svg fill="none" stroke="currentColor" stroke-width="1.75"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="13" height="13">
+              <path d="M15 3h6v6M14 10l7-7M9 21h-6v-6M10 14l-7 7"/>
+            </svg>
+            Abrir en Google Maps
+          </button>
+        </div>
+
+        <div *ngIf="!tienesCoordenadas" class="sin-mapa">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="20" height="20">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Sin ubicación registrada. Edita el cliente para agregar coordenadas.
+        </div>
+      </div>
+
+      <!-- ══ DATOS COMERCIALES ══ -->
+      <div class="section">
+        <div class="section-title">Datos comerciales</div>
+        <div class="info-card">
+          <div class="ic-row">
+            <span class="ic-k">Saldo pendiente</span>
+            <span class="ic-v"
+              [class.saldo-deuda]="(cliente.saldo_pendiente ?? 0) > 0">
+              Bs {{ cliente.saldo_pendiente ?? 0 | number:'1.2-2' }}
+            </span>
+          </div>
+          <div class="ic-row">
+            <span class="ic-k">Crédito</span>
+            <span class="ic-v">
+              {{ cliente.credito_habilitado ? 'Habilitado' : 'Deshabilitado' }}
+            </span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.credito_habilitado">
+            <span class="ic-k">Límite de crédito</span>
+            <span class="ic-v">Bs {{ cliente.limite_credito ?? 0 | number:'1.2-2' }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.credito_habilitado">
+            <span class="ic-k">Días de crédito</span>
+            <span class="ic-v">{{ cliente.dias_credito ?? 0 }} días</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.valor_promedio_pedido">
+            <span class="ic-k">Valor promedio</span>
+            <span class="ic-v">Bs {{ cliente.valor_promedio_pedido | number:'1.2-2' }}</span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.frecuencia_promedio_dias">
+            <span class="ic-k">Frecuencia</span>
+            <span class="ic-v">cada {{ cliente.frecuencia_promedio_dias }} días</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ HORARIOS Y DÍAS ══ -->
+      <div class="section" *ngIf="cliente.horario_recepcion_desde || cliente.dias_entrega">
+        <div class="section-title">Horario de recepción</div>
+        <div class="info-card">
+          <div class="ic-row" *ngIf="cliente.horario_recepcion_desde">
+            <span class="ic-k">Horario</span>
+            <span class="ic-v">
+              {{ cliente.horario_recepcion_desde | date:'HH:mm' }} —
+              {{ cliente.horario_recepcion_hasta | date:'HH:mm' }}
+            </span>
+          </div>
+          <div class="ic-row" *ngIf="cliente.dias_entrega">
+            <span class="ic-k">Días de entrega</span>
+            <span class="ic-v">{{ cliente.dias_entrega }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ÚLTIMAS COMPRAS ══ -->
+      <div class="section" *ngIf="cliente.pedidos?.length">
+        <div class="section-title">Últimas compras ({{ cliente.pedidos?.length }})</div>
+        <div class="pedidos-list">
+          <div class="pedido-item" *ngFor="let p of cliente.pedidos">
+            <div class="pi-info">
+              <div class="pi-num">{{ p.numero_pedido }}</div>
+              <div class="pi-fecha">{{ p.fecha_creacion | date:'dd MMM yyyy':'':'es' }}</div>
+            </div>
+            <div class="pi-right">
+              <span class="pi-badge"
+                [style.color]="estadoPedidoColor(p.estado)"
+                [style.background]="estadoPedidoColor(p.estado) + '18'">
+                {{ p.estado.replace('_', ' ') }}
+              </span>
+              <span class="pi-total">Bs {{ p.total_monto | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ NOTAS INTERNAS ══ -->
+      <div class="section" *ngIf="cliente.notas_internas">
+        <div class="section-title">Notas internas</div>
+        <div class="info-card notas">
+          <p>{{ cliente.notas_internas }}</p>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+
+  <!-- Footer con botones -->
+  <div class="drawer-footer" *ngIf="!loading && cliente">
+    <button class="btn btn-secondary" *ngIf="puedeEditar" (click)="onEditar()">
+      <svg fill="none" stroke="currentColor" stroke-width="1.75"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M7 7h-1a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/>
+        <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97l-8.415 8.385v3h3l8.385-8.415z"/>
+      </svg>
+      Editar
+    </button>
+
+    <button class="btn btn-danger" *ngIf="puedeEliminar" (click)="onEliminar()">
+      <svg fill="none" stroke="currentColor" stroke-width="1.75"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      </svg>
+      Dar de baja
+    </button>
+  </div>
+</aside>

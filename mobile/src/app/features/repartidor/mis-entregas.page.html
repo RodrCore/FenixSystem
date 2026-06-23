@@ -1,0 +1,226 @@
+<app-navbar titulo="Mis entregas" [mostrarPerfil]="true" />
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="cargar($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="page-content">
+    <!-- Stats del día -->
+    <div class="rep-stats">
+      <div class="rep-stat-card">
+        <div class="rs-num" style="color: #2563eb">{{ stats.pendientes }}</div>
+        <div class="rs-lbl">Pendientes</div>
+      </div>
+      <div class="rep-stat-card">
+        <div class="rs-num" style="color: #0891b2">{{ stats.en_ruta }}</div>
+        <div class="rs-lbl">En ruta</div>
+      </div>
+      <div class="rep-stat-card">
+        <div class="rs-num" style="color: #059669">
+          {{ stats.entregados_hoy }}
+        </div>
+        <div class="rs-lbl">Hoy</div>
+      </div>
+    </div>
+    <!-- Junto a las stats arriba -->
+    <button class="btn-mini-reportes" (click)="router.navigate(['/reportes'])">
+      <svg
+        fill="none"
+        stroke="#7C3AED"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+      >
+        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+        <path
+          d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"
+        />
+      </svg>
+      Mis reportes mensuales
+    </button>
+
+    <!-- Botón ir al mapa -->
+    <button class="btn-mapa" (click)="verEnMapa()" *ngIf="entregas.length">
+      <div class="bm-icon">
+        <svg
+          fill="none"
+          stroke="white"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
+          aria-hidden="true"
+        >
+          <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+          <path
+            d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+          />
+        </svg>
+      </div>
+      <div class="bm-text">
+        <div class="bm-title">Ver entregas en mapa</div>
+        <div class="bm-sub">Optimizar mi ruta de hoy</div>
+      </div>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        style="margin-left: auto; color: #94a3b8"
+        aria-hidden="true"
+      >
+        <path d="m9 18 6-6-6-6" />
+      </svg>
+    </button>
+
+    <!-- Skeleton -->
+    <div *ngIf="loading">
+      <div
+        class="skeleton-row"
+        style="height: 120px; margin-bottom: 8px"
+        *ngFor="let i of [1,2,3]"
+      ></div>
+    </div>
+
+    <!-- Lista de entregas -->
+    <ng-container *ngIf="!loading">
+      <div *ngIf="!entregas.length" class="empty-full">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          viewBox="0 0 24 24"
+          width="36"
+          height="36"
+          aria-hidden="true"
+        >
+          <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+          <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+          <path d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2" />
+        </svg>
+        <p>Sin entregas asignadas</p>
+      </div>
+
+      <div
+        class="entrega-card"
+        *ngFor="let p of entregas; let i = index"
+        (click)="verDetalle(p)"
+      >
+        <div class="ec-num-badge">{{ i + 1 }}</div>
+
+        <div class="ec-info">
+          <div class="ec-header">
+            <span class="ec-pedido">{{ p.numero }}</span>
+            <span
+              class="ec-estado"
+              [style.color]="estadoColor(p.estado)"
+              [style.background]="estadoColor(p.estado) + '15'"
+            >
+              {{ p.estado | replace:'_':' ' }}
+            </span>
+          </div>
+
+          <div class="ec-cliente">{{ p.cliente?.razon_social }}</div>
+
+          <div class="ec-direccion" *ngIf="p.cliente?.direccion_calle">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              width="11"
+              height="11"
+              aria-hidden="true"
+            >
+              <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+              <path
+                d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+              />
+            </svg>
+            {{ p.cliente?.direccion_calle }}
+          </div>
+
+          <div class="ec-bottom">
+            <span class="ec-total">Bs {{ p.total | number:'1.2-2' }}</span>
+
+            <div class="ec-actions">
+              <button
+                class="ec-action ec-call"
+                (click)="llamar(p, $event)"
+                *ngIf="p.cliente?.contacto_telefono"
+                aria-label="Llamar"
+              >
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5-2.5l5 2v4a2 2 0 0 1-2 2a16 16 0 0 1-15-15a2 2 0 0 1 2-2"
+                  />
+                </svg>
+              </button>
+
+              <button
+                class="ec-action ec-wa"
+                (click)="whatsapp(p, $event)"
+                aria-label="WhatsApp"
+              >
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  aria-hidden="true"
+                >
+                  <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9l-5.05.9" />
+                </svg>
+              </button>
+
+              <button
+                class="ec-action ec-nav"
+                (click)="navegar(p, $event)"
+                [disabled]="!tieneUbicacion(p)"
+                aria-label="Navegar"
+              >
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  aria-hidden="true"
+                >
+                  <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</ion-content>
+<app-tabbar tab="pedidos" />

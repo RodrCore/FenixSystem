@@ -1,0 +1,299 @@
+<!-- Overlay -->
+<div class="modal-backdrop" (click)="cancelar()"></div>
+
+<div class="modal-form">
+  <!-- HEADER -->
+  <div class="mf-header">
+    <div>
+      <div class="mf-title">{{ esEdicion ? 'Editar cliente' : 'Nuevo cliente' }}</div>
+      <div class="mf-sub">{{ esEdicion ? cliente?.razon_social : 'Crear un nuevo cliente' }}</div>
+    </div>
+    <button class="mf-close" (click)="cancelar()" aria-label="Cerrar">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="18" height="18">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- TABS -->
+  <div class="mf-tabs">
+    <button class="tab" [class.tab-active]="seccionActiva === 'negocio'"
+      (click)="irSeccion('negocio')">Negocio</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'contacto'"
+      (click)="irSeccion('contacto')">Contacto</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'direccion'"
+      (click)="irSeccion('direccion')">Dirección</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'comercial'"
+      (click)="irSeccion('comercial')">Comercial</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'otros'"
+      (click)="irSeccion('otros')">Otros</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="mf-body" [formGroup]="form">
+
+    <!-- ══ NEGOCIO ══ -->
+    <div *ngIf="seccionActiva === 'negocio'" class="seccion">
+      <div class="mf-grid-2">
+        <div class="mf-fld">
+          <label>Razón social <span class="req">*</span></label>
+          <input type="text" formControlName="razon_social" class="mf-input"
+            placeholder="Nombre legal del negocio" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Nombre comercial</label>
+          <input type="text" formControlName="nombre_comercial" class="mf-input"
+            placeholder="Cómo lo conocen comúnmente" />
+        </div>
+
+        <div class="mf-fld">
+          <label>NIT / RFC</label>
+          <input type="text" formControlName="nit_rfc" class="mf-input"
+            placeholder="Ej: 12345678" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Tipo de cliente</label>
+          <select formControlName="tipo_cliente" class="mf-input">
+            <option *ngFor="let t of tiposCliente" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Régimen fiscal</label>
+          <select formControlName="regimen_fiscal" class="mf-input">
+            <option value="">— Sin especificar —</option>
+            <option *ngFor="let r of regimenesFiscales" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONTACTO ══ -->
+    <div *ngIf="seccionActiva === 'contacto'" class="seccion">
+      <div class="mf-grid-3">
+        <div class="mf-fld">
+          <label>Nombre(s)</label>
+          <input type="text" formControlName="contacto_nombres" class="mf-input"
+            placeholder="Nombre del contacto" />
+        </div>
+        <div class="mf-fld">
+          <label>Apellido paterno</label>
+          <input type="text" formControlName="contacto_apellido_paterno" class="mf-input" />
+        </div>
+        <div class="mf-fld">
+          <label>Apellido materno</label>
+          <input type="text" formControlName="contacto_apellido_materno" class="mf-input" />
+        </div>
+      </div>
+
+      <div class="mf-grid-2">
+        <div class="mf-fld">
+          <label>Teléfono <span class="req">*</span></label>
+          <input type="tel" formControlName="contacto_telefono" class="mf-input"
+            placeholder="Ej: 71234567" />
+        </div>
+        <div class="mf-fld">
+          <label>WhatsApp</label>
+          <input type="tel" formControlName="contacto_whatsapp" class="mf-input"
+            placeholder="Si es diferente al teléfono" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Email</label>
+          <input type="email" formControlName="contacto_email" class="mf-input"
+            placeholder="cliente@ejemplo.com" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DIRECCIÓN ══ -->
+    <div *ngIf="seccionActiva === 'direccion'" class="seccion">
+
+      <!-- MAPA INTERACTIVO -->
+      <div class="mapa-form">
+        <div class="mapa-form-title">
+          <span>📍 Ubicación en el mapa</span>
+          <span class="mapa-form-hint">Click en el mapa o arrastra el marcador</span>
+        </div>
+
+        <div id="cliente-form-map" class="mapa-interactivo"></div>
+
+        <div class="coords-display"
+          [class.con-coords]="form.value.latitud && form.value.longitud">
+          <span *ngIf="form.value.latitud && form.value.longitud">
+            ✓ {{ form.value.latitud | number:'1.6-6' }}, {{ form.value.longitud | number:'1.6-6' }}
+          </span>
+          <span *ngIf="!form.value.latitud || !form.value.longitud">
+            Sin ubicación seleccionada
+          </span>
+
+          <span *ngIf="geocoding" class="geocoding-msg">
+            <svg fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" viewBox="0 0 24 24" width="12" height="12"
+              style="animation: spin 1s linear infinite">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Buscando dirección...
+          </span>
+        </div>
+
+        <div class="mapa-actions">
+          <button type="button" class="btn-mapa-action" (click)="obtenerMiUbicacion()">
+            <svg fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="12" height="12">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line x1="12" y1="2" x2="12" y2="4"/>
+              <line x1="12" y1="20" x2="12" y2="22"/>
+              <line x1="20" y1="12" x2="22" y2="12"/>
+              <line x1="2" y1="12" x2="4" y2="12"/>
+            </svg>
+            Mi ubicación
+          </button>
+          <button type="button" class="btn-mapa-action" (click)="centrarEnPotosi()">
+            <svg fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="12" height="12">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            Centrar en Potosí
+          </button>
+          <button type="button" class="btn-mapa-action" (click)="limpiarCoordenadas()"
+            [disabled]="!form.value.latitud">
+            <svg fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" viewBox="0 0 24 24" width="12" height="12">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+            Quitar
+          </button>
+        </div>
+      </div>
+
+      <!-- CAMPOS DE DIRECCIÓN -->
+      <div class="mf-grid-2">
+        <div class="mf-fld mf-fld-2x">
+          <label>Calle</label>
+          <input type="text" formControlName="direccion_calle" class="mf-input"
+            placeholder="Av. Bolívar, Calle Cobija..." />
+        </div>
+        <div class="mf-fld">
+          <label>Número</label>
+          <input type="text" formControlName="direccion_numero" class="mf-input"
+            placeholder="123, S/N" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Colonia / Barrio</label>
+          <input type="text" formControlName="direccion_colonia" class="mf-input"
+            placeholder="Centro, San Roque..." />
+        </div>
+        <div class="mf-fld">
+          <label>Ciudad</label>
+          <input type="text" formControlName="direccion_ciudad" class="mf-input"
+            placeholder="Potosí" />
+        </div>
+        <div class="mf-fld">
+          <label>Código postal</label>
+          <input type="text" formControlName="direccion_codigo_postal" class="mf-input" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Referencias</label>
+          <textarea formControlName="direccion_referencias" class="mf-textarea" rows="2"
+            placeholder="Frente a la plaza, casa con portón rojo..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ COMERCIAL ══ -->
+    <div *ngIf="seccionActiva === 'comercial'" class="seccion">
+
+      <label class="toggle-row">
+        <input type="checkbox" formControlName="credito_habilitado" />
+        <span>Habilitar crédito para este cliente</span>
+      </label>
+
+      <div *ngIf="form.get('credito_habilitado')?.value" class="mf-grid-2 sub-section">
+        <div class="mf-fld">
+          <label>Límite de crédito (Bs)</label>
+          <input type="number" formControlName="limite_credito" class="mf-input"
+            min="0" placeholder="0.00" />
+        </div>
+        <div class="mf-fld">
+          <label>Días de crédito</label>
+          <input type="number" formControlName="dias_credito" class="mf-input"
+            min="0" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="mf-fld" style="margin-top: 12px">
+        <label>Estado</label>
+        <select formControlName="estado" class="mf-input">
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ══ OTROS ══ -->
+    <div *ngIf="seccionActiva === 'otros'" class="seccion">
+
+      <div class="mf-grid-2">
+        <div class="mf-fld">
+          <label>Recepción desde</label>
+          <input type="time" formControlName="horario_recepcion_desde" class="mf-input" />
+        </div>
+        <div class="mf-fld">
+          <label>Recepción hasta</label>
+          <input type="time" formControlName="horario_recepcion_hasta" class="mf-input" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Días de entrega</label>
+          <input type="text" formControlName="dias_entrega" class="mf-input"
+            placeholder="Ej: Lunes, Miércoles, Viernes" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Notas internas</label>
+          <textarea formControlName="notas_internas" class="mf-textarea" rows="4"
+            placeholder="Información solo visible para el equipo..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" *ngIf="errorMsg">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      {{ errorMsg }}
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="mf-footer">
+    <button class="btn btn-ghost" (click)="cancelar()" [disabled]="guardando">
+      Cancelar
+    </button>
+    <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M5 12l5 5l10-10"/>
+      </svg>
+      {{ guardando ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Crear cliente') }}
+    </button>
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>

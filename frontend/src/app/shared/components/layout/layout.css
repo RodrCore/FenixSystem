@@ -1,0 +1,26 @@
+/* src/app/shared/components/layout/layout.css */
+
+/* ── Item activo del sidebar ── */
+.sb-active {
+  background-color: rgba(96, 165, 250, 0.10) !important;
+  color: #2563EB !important;
+  border-left-color: #2563EB !important;
+  font-weight: 500 !important;
+}
+
+/* ── Hover de ítems del sidebar ── */
+.sb-item:hover:not(.sb-active) {
+  background-color: rgba(15, 23, 42, 0.05);
+  color: #0F172A;
+}
+
+/* Scrollbar delgado */
+nav::-webkit-scrollbar { width: 3px; }
+nav::-webkit-scrollbar-track { background: transparent; }
+nav::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.25); border-radius: 999px; }
+
+/* Mobile sidebar */
+@media (max-width: 1023px) {
+  aside.-translate-x-full { transform: translateX(-100%); }
+  aside.translate-x-0     { transform: translateX(0); }
+}

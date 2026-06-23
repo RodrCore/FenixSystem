@@ -1,0 +1,66 @@
+<div class="tab-loading" *ngIf="loading">
+  <div class="skel" style="height:90px"></div>
+  <div class="skel" style="height:280px"></div>
+</div>
+
+<ng-container *ngIf="!loading && data">
+  <!-- KPIs -->
+  <div class="kpis-grid">
+    <app-kpi-card
+      label="Total pedidos"
+      [value]="data.kpis.total_pedidos"
+      [variacion]="data.kpis.variacion"
+      color="#0891B2" />
+
+    <app-kpi-card
+      label="Tiempo prom. entrega"
+      [value]="data.kpis.promedio_dias_entrega + ' días'"
+      subtext="creación → entrega"
+      color="#7C3AED" />
+
+    <app-kpi-card
+      label="Período anterior"
+      [value]="data.kpis.total_anterior"
+      subtext="referencia"
+      color="#94A3B8" />
+
+    <app-kpi-card
+      label="Total preventistas"
+      [value]="data.top_preventistas.length"
+      subtext="con pedidos en período"
+      color="#D97706" />
+  </div>
+
+  <!-- Gráficos -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Pedidos por estado</div>
+      <div class="chart-wrap"><canvas #chartEstados></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Evolución diaria</div>
+      <div class="chart-wrap"><canvas #chartEvolucion></canvas></div>
+    </div>
+  </div>
+
+  <!-- Top preventistas -->
+  <div class="card">
+    <div class="card-title">Top preventistas</div>
+    <table class="rank-table">
+      <thead>
+        <tr><th>#</th><th>Preventista</th><th>Pedidos</th><th>Total vendido</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of data.top_preventistas; let i = index">
+          <td class="rank-i">{{ i + 1 }}</td>
+          <td><div class="rank-name">{{ p.nombre }}</div></td>
+          <td class="td-num">{{ p.cantidad_pedidos }}</td>
+          <td class="td-money">Bs {{ fmtBs(p.total_vendido) }}</td>
+        </tr>
+        <tr *ngIf="data.top_preventistas.length === 0">
+          <td colspan="4" class="empty">Sin datos para este período</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ng-container>

@@ -1,0 +1,203 @@
+<div class="modal-backdrop" (click)="cancelar()"></div>
+
+<div class="modal-form">
+  <!-- HEADER -->
+  <div class="mf-header">
+    <div>
+      <div class="mf-title">Nueva orden de reabastecimiento</div>
+      <div class="mf-sub">Solicitar productos a un proveedor</div>
+    </div>
+    <button class="mf-close" (click)="cancelar()" aria-label="Cerrar">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="18" height="18">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- BODY -->
+  <div class="mf-body">
+
+    <!-- DATOS DE LA ORDEN -->
+    <div class="seccion">
+      <div class="seccion-title">Datos de la orden</div>
+      <div class="mf-grid-2">
+        <div class="mf-fld">
+          <label>Proveedor <span class="req">*</span></label>
+          <select class="mf-input" [(ngModel)]="proveedorSeleccionadoId">
+            <option [ngValue]="null">— Selecciona un proveedor —</option> 
+            <option *ngFor="let p of proveedores" [ngValue]="p.id">
+              {{ p.razon_social }}
+              <span *ngIf="p.nombre_comercial"> ({{ p.nombre_comercial }})</span>
+            </option>
+          </select>
+        </div>
+
+        <div class="mf-fld">
+          <label>Fecha esperada</label>
+          <input type="date" class="mf-input" [(ngModel)]="fechaEsperada" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Notas</label>
+          <textarea class="mf-textarea" [(ngModel)]="notas" rows="2"
+            placeholder="Notas sobre la orden..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUGERENCIAS DE BAJO STOCK -->
+    <div class="seccion" *ngIf="sugerencias.length > 0">
+      <button class="btn-sugerencias" (click)="toggleSugerencias()">
+        <svg fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        {{ mostrarSugerencias ? 'Ocultar' : 'Ver' }} productos con bajo stock ({{ sugerencias.length }})
+      </button>
+
+      <div class="sugerencias-list" *ngIf="mostrarSugerencias">
+        <div class="sug-item" *ngFor="let s of sugerencias">
+          <div class="sug-info">
+            <div class="sug-nombre">{{ s.nombre }}</div>
+            <div class="sug-stock">
+              Stock actual: <strong>{{ s.stock_actual }}</strong> /
+              Mínimo: <strong>{{ s.stock_minimo }}</strong>
+            </div>
+          </div>
+          <div class="sug-action">
+            <span class="sug-cantidad">Sugerido: <strong>{{ s.cantidad_sugerida }}</strong></span>
+            <button class="btn-add-sug" (click)="agregarSugerencia(s)"
+              [disabled]="!s.presentaciones.length">
+              + Agregar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGREGAR PRODUCTOS -->
+    <div class="seccion">
+      <div class="seccion-title">Productos a solicitar</div>
+
+      <div class="buscador-prod">
+        <div class="search-wrap">
+          <svg class="search-icon" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" class="search-input"
+            placeholder="Buscar producto..."
+            [(ngModel)]="busquedaProducto"
+            (input)="onBuscarProductoInput()"
+            (blur)="cerrarResultados()" />
+          <div *ngIf="buscandoProducto" class="search-spinner">
+            <svg fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14"
+              style="animation: spin 1s linear infinite">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Resultados de búsqueda -->
+        <div class="resultados-dropdown" *ngIf="mostrandoResultados && resultadosBusqueda.length > 0">
+          <div class="resultado-item" *ngFor="let p of resultadosBusqueda">
+            <div class="rp-nombre">{{ p.nombre }}</div>
+            <div class="rp-presentaciones">
+              <button class="rp-pres"
+                *ngFor="let pp of p.presentaciones"
+                (mousedown)="agregarProductoBuscado(p, pp); $event.preventDefault()">
+                {{ pp.presentacion.nombre }} · Bs {{ pp.precio_venta }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de detalles -->
+      <div class="detalles-table" *ngIf="detalles.length > 0">
+        <div class="dt-header">
+          <div class="dt-col-nombre">Producto</div>
+          <div class="dt-col-cant">Cantidad</div>
+          <div class="dt-col-precio">Precio unit. (Bs)</div>
+          <div class="dt-col-sub">Subtotal</div>
+          <div class="dt-col-acc"></div>
+        </div>
+        <div class="dt-row" *ngFor="let d of detalles; let i = index">
+          <div class="dt-col-nombre">
+            <div class="dt-name">{{ d.producto_nombre }}</div>
+            <div class="dt-pres">{{ d.presentacion_nombre }}</div>
+          </div>
+          <div class="dt-col-cant">
+            <input type="number" min="1" step="1" class="dt-input"
+              [value]="d.cantidad_solicitada"
+              (input)="actualizarCantidad(i, $any($event.target).value)" />
+          </div>
+          <div class="dt-col-precio">
+            <input type="number" min="0" step="0.01" class="dt-input"
+              [value]="d.precio_unitario_compra"
+              (input)="actualizarPrecio(i, $any($event.target).value)" />
+          </div>
+          <div class="dt-col-sub">
+            Bs {{ subtotalItem(d) | number:'1.2-2' }}
+          </div>
+          <div class="dt-col-acc">
+            <button class="btn-quitar" (click)="quitarItem(i)" title="Quitar">
+              <svg fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-detalles" *ngIf="detalles.length === 0">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5"
+          viewBox="0 0 24 24" width="32" height="32"
+          style="color:var(--color-candy-muted);margin-bottom:8px">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <p>Busca productos arriba para agregarlos</p>
+      </div>
+    </div>
+
+    <!-- TOTAL -->
+    <div class="total-box" *ngIf="detalles.length > 0">
+      <span class="total-lbl">TOTAL:</span>
+      <span class="total-val">Bs {{ totalGeneral | number:'1.2-2' }}</span>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-msg" *ngIf="errorMsg">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      {{ errorMsg }}
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="mf-footer">
+    <button class="btn btn-ghost" (click)="cancelar()" [disabled]="guardando">
+      Cancelar
+    </button>
+    <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+      {{ guardando ? 'Guardando...' : 'Crear orden' }}
+    </button>
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>

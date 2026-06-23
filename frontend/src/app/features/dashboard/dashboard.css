@@ -1,0 +1,343 @@
+/* Animación existente (no tocar si ya está) */
+.card-enter {
+  animation: fadeInUp 0.3s ease-out;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── BOTÓN REFRESCAR ─── */
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--color-candy-surface);
+  border: 0.5px solid var(--color-candy-border);
+  color: var(--color-candy-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover:not([disabled]) {
+  background: var(--color-candy-bg);
+  color: var(--color-candy-text);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── KPI CARDS ─── */
+.kpi-card {
+  background: var(--color-candy-surface);
+  border: 0.5px solid var(--color-candy-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  color: var(--color-candy-muted);
+}
+
+.kpi-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-candy-text);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--color-candy-muted);
+  margin-bottom: 8px;
+}
+
+.kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.kpi-trend.up {
+  background: rgba(16, 185, 129, 0.10);
+  color: #065F46;
+}
+
+.kpi-trend.down {
+  background: rgba(239, 68, 68, 0.10);
+  color: #991B1B;
+}
+
+/* ─── SKELETON CARDS ─── */
+.skeleton-card {
+  height: 130px;
+  background: linear-gradient(90deg,
+    var(--color-candy-bg) 0%,
+    var(--color-candy-border) 50%,
+    var(--color-candy-bg) 100%);
+  background-size: 200% 100%;
+  border-radius: 12px;
+  border: 0.5px solid var(--color-candy-border);
+  animation: shimmer-skel 1.4s infinite;
+}
+
+@keyframes shimmer-skel {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── ALERTAS ─── */
+.alerts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.alert-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 3px solid;
+}
+
+.alert-card.warning {
+  background: rgba(217, 119, 6, 0.06);
+  border-left-color: #D97706;
+}
+
+.alert-card.danger {
+  background: rgba(220, 38, 38, 0.06);
+  border-left-color: #DC2626;
+}
+
+.alert-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.alert-card.warning .alert-icon {
+  background: rgba(217, 119, 6, 0.12);
+  color: #D97706;
+}
+
+.alert-card.danger .alert-icon {
+  background: rgba(220, 38, 38, 0.12);
+  color: #DC2626;
+}
+
+.alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-candy-text);
+}
+
+.alert-sub {
+  font-size: 10.5px;
+  color: var(--color-candy-muted);
+  margin-top: 1px;
+}
+
+.alert-action {
+  font-size: 11px;
+  font-weight: 500;
+  color: #2563eb;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.alert-action:hover {
+  text-decoration: underline;
+}
+
+/* ─── CHART CARD ─── */
+.chart-card {
+  background: var(--color-candy-surface);
+  border: 0.5px solid var(--color-candy-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-candy-text);
+}
+
+.card-sub {
+  font-size: 10.5px;
+  color: var(--color-candy-muted);
+}
+
+.chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+/* ─── TOP PRODUCTOS ─── */
+.top-products {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.top-product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-candy-bg);
+  border-radius: 8px;
+}
+
+.tp-rank {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-candy-muted);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tp-rank.rank-1 { background: #F59E0B; }
+.tp-rank.rank-2 { background: #94A3B8; }
+.tp-rank.rank-3 { background: #D97706; }
+
+.tp-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tp-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-candy-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tp-code {
+  font-size: 10px;
+  color: var(--color-candy-muted);
+  font-family: monospace;
+  margin-top: 1px;
+}
+
+.tp-value {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-candy-text);
+  white-space: nowrap;
+}
+
+.empty-small {
+  text-align: center;
+  padding: 24px 12px;
+  font-size: 11.5px;
+  color: var(--color-candy-muted);
+  font-style: italic;
+}
+
+/* ─── TABLA ÚLTIMOS PEDIDOS ─── */
+.th-pedidos {
+  text-align: left;
+  padding: 0 8px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-candy-muted);
+  border-bottom: 0.5px solid var(--color-candy-border);
+}
+
+.td-pedido {
+  padding: 9px 8px;
+  border-bottom: 0.5px solid var(--color-candy-border);
+}
+
+.empty-row {
+  text-align: center;
+  padding: 20px 12px;
+  color: var(--color-candy-muted);
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* DARK MODE */
+:host-context(.dark) .kpi-card,
+:host-context(.dark) .chart-card,
+:host-context(.dark) .refresh-btn {
+  background: var(--color-candy-dark-surface);
+  border-color: var(--color-candy-dark-border);
+}
+
+:host-context(.dark) .kpi-value,
+:host-context(.dark) .card-title,
+:host-context(.dark) .alert-title,
+:host-context(.dark) .tp-name,
+:host-context(.dark) .tp-value {
+  color: var(--color-candy-dark-text);
+}
+
+:host-context(.dark) .top-product {
+  background: var(--color-candy-dark-bg);
+}

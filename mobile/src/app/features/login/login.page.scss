@@ -1,0 +1,211 @@
+// src/app/features/login/login.page.scss
+
+$blue:      #60A5FA;
+$blue-dark: #2563EB;
+$bg:        #F8FAFC;
+$surface:   #FFFFFF;
+$text:      #0F172A;
+$muted:     #64748B;
+$border:    #E2E8F0;
+$danger:    #DC2626;
+
+.login-content {
+  --background: #{$bg};
+}
+
+.login-wrapper {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  min-height:      100%;
+  padding:         32px 20px 24px;
+}
+
+.login-header {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  margin-bottom:  32px;
+}
+
+.login-logo {
+  width:           68px;
+  height:          68px;
+  border-radius:   18px;
+  background:      linear-gradient(135deg, $blue, $blue-dark);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  margin-bottom:   14px;
+  box-shadow:      0 8px 24px rgba(96, 165, 250, 0.35);
+}
+
+.login-title {
+  font-size:      26px;
+  font-weight:    600;
+  color:          $text;
+  margin:         0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.login-sub {
+  font-size: 13px;
+  color:     $muted;
+  margin:    0;
+}
+
+.login-card {
+  background:    $surface;
+  border-radius: 18px;
+  border:        0.5px solid $border;
+  padding:       24px 20px;
+  width:         100%;
+  max-width:     400px;
+  box-shadow:    0 4px 24px rgba(15, 23, 42, 0.06);
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display:       block;
+  font-size:     12px;
+  font-weight:   500;
+  color:         $blue-dark;
+  margin-bottom: 6px;
+}
+
+.field-wrap {
+  display:       flex;
+  align-items:   center;
+  height:        46px;
+  border-radius: 12px;
+  border:        1.5px solid $border;
+  background:    $bg;
+  padding:       0 12px;
+  transition:    border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: rgba(96, 165, 250, 0.55);
+    box-shadow:   0 0 0 3px rgba(96, 165, 250, 0.10);
+  }
+
+  &.field-err {
+    border-color: $danger;
+  }
+}
+
+.field-icon {
+  font-size:    18px;
+  color:        $muted;
+  margin-right: 10px;
+  flex-shrink:  0;
+}
+
+.field-input {
+  flex:       1;
+  border:     none;
+  outline:    none;
+  background: transparent;
+  font-size:  14px;
+  color:      $text;
+  font-family: inherit;
+
+  // ✅ Sin lighten() — color fijo
+  &::placeholder { color: #94A3B8; }
+}
+
+.pw-toggle {
+  background:  transparent;
+  border:      none;
+  padding:     0;
+  cursor:      pointer;
+  color:       $muted;
+  font-size:   18px;
+  display:     flex;
+  align-items: center;
+
+  &:active { opacity: 0.7; }
+}
+
+.field-error {
+  display:     block;
+  font-size:   11px;
+  color:       $danger;
+  margin-top:  5px;
+  padding-left: 4px;
+}
+
+.srv-error {
+  display:       flex;
+  align-items:   center;
+  gap:           8px;
+  padding:       10px 14px;
+  border-radius: 10px;
+  background:    rgba(220, 38, 38, 0.06);
+  border:        0.5px solid rgba(220, 38, 38, 0.22);
+  color:         $danger;
+  font-size:     13px;
+  margin-bottom: 16px;
+}
+
+.btn-login {
+  width:           100%;
+  height:          48px;
+  border-radius:   12px;
+  border:          1.5px solid rgba(96, 165, 250, 0.40);
+  background:      rgba(96, 165, 250, 0.12);
+  color:           $blue-dark;
+  font-size:       15px;
+  font-weight:     500;
+  font-family:     inherit;
+  cursor:          pointer;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             8px;
+  margin-top:      8px;
+  transition:      background 0.15s, transform 0.1s;
+
+  ion-icon { font-size: 20px; }
+
+  &:active:not([disabled]) {
+    transform:  scale(0.98);
+    background: rgba(96, 165, 250, 0.20);
+  }
+
+  &[disabled] {
+    opacity: 0.60;
+    cursor:  not-allowed;
+  }
+}
+
+.btn-spinner {
+  --color: #{$blue-dark};
+  width:   18px;
+  height:  18px;
+}
+
+.login-footer {
+  font-size:  11px;
+  // ✅ Sin lighten() — color fijo
+  color:      #94A3B8;
+  margin-top: 24px;
+  text-align: center;
+}
+
+// ── Dark mode ─────────────────────────────────────────────────
+@media (prefers-color-scheme: dark) {
+  .login-content   { --background: #0F0F1A; }
+  .login-title     { color: #F1F5F9; }
+  .login-sub       { color: #94A3B8; }
+  .login-card      { background: #1A1A2E; border-color: rgba(255,255,255,0.08); }
+  .field-label     { color: #93C5FD; }
+  .field-wrap      { background: #0F0F1A; border-color: rgba(255,255,255,0.10); }
+  .field-input     { color: #F1F5F9; }
+  .field-input::placeholder { color: #475569; }
+  .btn-login       { color: #93C5FD; border-color: rgba(96,165,250,0.30); }
+  .login-footer    { color: #475569; }
+}

@@ -1,0 +1,98 @@
+<div class="mapa-fullscreen">
+  <!-- Header -->
+  <div class="mapa-header">
+    <button class="mapa-back" (click)="cancelar()" aria-label="Cancelar">
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        viewBox="0 0 24 24"
+        width="20"
+        height="20"
+        aria-hidden="true"
+      >
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+    <div class="mapa-title-wrap">
+      <span class="mapa-title">Seleccionar ubicación</span>
+      <span class="mapa-sub">Mueve el pin a la puerta exacta del negocio</span>
+    </div>
+    <button
+      class="mapa-gps-btn"
+      (click)="centrarGPS()"
+      aria-label="Mi ubicación"
+    >
+      <svg
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+        <circle cx="12" cy="12" r="8" stroke-dasharray="2 3" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mapa -->
+  <div id="mapa-cliente" class="mapa-container"></div>
+
+  <!-- Crosshair central fijo -->
+  <div class="mapa-crosshair" aria-hidden="true">
+    <div class="ch-ring"></div>
+    <div class="ch-dot"></div>
+  </div>
+
+  <!-- Coordenadas actuales -->
+  <div class="mapa-coords" *ngIf="coordenadas">
+    <svg
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.75"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      viewBox="0 0 24 24"
+      width="13"
+      height="13"
+      aria-hidden="true"
+    >
+      <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+      <path
+        d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+      />
+    </svg>
+    {{ coordenadas.lat | number:'1.6-6' }}, {{ coordenadas.lng | number:'1.6-6'
+    }}
+  </div>
+
+  <!-- Botón confirmar -->
+  <div class="mapa-footer">
+    <button
+      class="mapa-confirmar"
+      (click)="confirmar()"
+      [disabled]="!coordenadas"
+    >
+      <svg
+        fill="none"
+        stroke="white"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+      >
+        <path d="M5 12l5 5l10-10" />
+      </svg>
+      Confirmar ubicación
+    </button>
+  </div>
+</div>

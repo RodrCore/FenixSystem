@@ -1,0 +1,18 @@
+<div class="filtros">
+  <div class="chips">
+    <button
+      *ngFor="let o of opciones"
+      class="chip"
+      [class.chip-active]="filtro.periodo === o.v"
+      (click)="seleccionar(o.v)">
+      {{ o.n }}
+    </button>
+  </div>
+
+  <div class="custom" *ngIf="esCustom">
+    <label>Desde</label>
+    <input type="date" [(ngModel)]="desdeStr" (change)="onFechaChange()" />
+    <label>Hasta</label>
+    <input type="date" [(ngModel)]="hastaStr" (change)="onFechaChange()" />
+  </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="tab-loading" *ngIf="loading">
+  <div class="skel" style="height:90px"></div>
+  <div class="skel" style="height:280px"></div>
+</div>
+
+<ng-container *ngIf="!loading && data">
+  <div class="kpis-grid">
+    <app-kpi-card
+      label="Total productos"
+      [value]="data.kpis.total_productos"
+      color="#0891B2" />
+    <app-kpi-card
+      label="Stock bajo"
+      [value]="data.kpis.productos_stock_bajo"
+      subtext="bajo el mínimo"
+      color="#D97706" />
+    <app-kpi-card
+      label="Sin stock"
+      [value]="data.kpis.productos_sin_stock"
+      color="#DC2626" />
+    <app-kpi-card
+      label="Valor inventario"
+      [value]="'Bs ' + fmtBs(data.kpis.valor_inventario)"
+      color="#059669" />
+  </div>
+
+  <!-- Alertas -->
+  <div class="alert-box danger" *ngIf="data.kpis.lotes_vencidos > 0">
+    <strong>⚠️ {{ data.kpis.lotes_vencidos }} lote(s) vencido(s)</strong> que aún tienen stock.
+    Considera retirarlos del inventario.
+  </div>
+
+  <div class="alert-box" *ngIf="data.kpis.lotes_por_vencer > 0">
+    <strong>📅 {{ data.kpis.lotes_por_vencer }} lote(s) por vencer</strong> en los próximos 30 días.
+    Prioriza su salida.
+  </div>
+
+  <div class="grid-2">
+    <!-- Categorías -->
+    <div class="card">
+      <div class="card-title">Productos por categoría</div>
+      <div class="chart-wrap chart-sm"><canvas #chartCategorias></canvas></div>
+    </div>
+
+    <!-- Stock bajo -->
+    <div class="card">
+      <div class="card-title">Productos con stock bajo</div>
+      <table class="rank-table">
+        <thead>
+          <tr><th>Producto</th><th>Stock</th><th>Mín.</th><th>Déficit</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of data.productos_stock_bajo">
+            <td>
+              <div class="rank-name">{{ p.nombre }}</div>
+              <div class="rank-code">{{ p.codigo }}</div>
+            </td>
+            <td class="td-num">{{ p.stock_actual }}</td>
+            <td class="td-num">{{ p.stock_minimo }}</td>
+            <td class="td-num" style="color:#DC2626;font-weight:600">{{ p.deficit }}</td>
+          </tr>
+          <tr *ngIf="data.productos_stock_bajo.length === 0">
+            <td colspan="4" class="empty">No hay productos con stock bajo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Lotes por vencer -->
+  <div class="card">
+    <div class="card-title">Lotes por vencer (próximos 30 días)</div>
+    <table class="rank-table">
+      <thead>
+        <tr><th>Código lote</th><th>Producto</th><th>Cantidad</th><th>Vence</th><th>Días</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let l of data.lotes_por_vencer">
+          <td><span style="font-family:monospace">{{ l.codigo_lote }}</span></td>
+          <td><div class="rank-name">{{ l.producto }}</div></td>
+          <td class="td-num">{{ l.cantidad }}</td>
+          <td class="td-num">{{ l.fecha_vencimiento | date:'dd MMM yyyy':'':'es' }}</td>
+          <td class="td-num" [style.color]="diasColor(l.dias_restantes)" style="font-weight:600">
+            {{ l.dias_restantes }} días
+          </td>
+        </tr>
+        <tr *ngIf="data.lotes_por_vencer.length === 0">
+          <td colspan="5" class="empty">No hay lotes por vencer en los próximos 30 días</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ng-container>

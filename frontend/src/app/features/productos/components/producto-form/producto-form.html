@@ -1,0 +1,98 @@
+<div class="pf-overlay" role="dialog" [attr.aria-label]="title">
+  <div class="pf-box">
+
+    <div class="pf-hdr">
+      <span class="pf-title">{{ title }}</span>
+      <button class="pf-close" (click)="close.emit()" aria-label="Cerrar">
+        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="pf-body">
+
+        <div class="pf-fld pf-full">
+          <label class="pf-lbl">Nombre del producto <span class="pf-req">*</span></label>
+          <input formControlName="nombre" class="pf-inp" placeholder="Ej: TABLETA CEIBO MENTA"
+            [class.pf-inp-err]="hasErr('nombre')" />
+          <span *ngIf="fieldErr('nombre')" class="pf-err">{{ fieldErr('nombre') }}</span>
+        </div>
+
+        <div class="pf-row">
+          <div class="pf-fld">
+            <label class="pf-lbl">Código interno</label>
+            <input formControlName="codigo_interno" class="pf-inp" placeholder="PRD-0001" />
+          </div>
+          <div class="pf-fld">
+            <label class="pf-lbl">Categoría</label>
+            <select formControlName="categoria_id" class="pf-sel">
+              <option value="">Seleccionar...</option>
+              <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pf-row">
+          <div class="pf-fld">
+            <label class="pf-lbl">Marca</label>
+            <input formControlName="marca" class="pf-inp" placeholder="Ej: Ceibo, Arcor..." />
+          </div>
+          <div class="pf-fld">
+            <label class="pf-lbl">Precio compra (Bs)</label>
+            <input formControlName="precio_compra_promedio" class="pf-inp" type="number"
+              step="0.01" placeholder="0.00" [class.pf-inp-err]="hasErr('precio_compra_promedio')" />
+            <span *ngIf="fieldErr('precio_compra_promedio')" class="pf-err">{{ fieldErr('precio_compra_promedio') }}</span>
+          </div>
+        </div>
+
+        <div class="pf-row">
+          <div class="pf-fld">
+            <label class="pf-lbl">Margen ganancia (%)</label>
+            <input formControlName="margen_ganancia_porcentaje" class="pf-inp" type="number"
+              step="0.5" placeholder="28" [class.pf-inp-err]="hasErr('margen_ganancia_porcentaje')" />
+            <span *ngIf="fieldErr('margen_ganancia_porcentaje')" class="pf-err">{{ fieldErr('margen_ganancia_porcentaje') }}</span>
+          </div>
+          <div class="pf-fld">
+            <label class="pf-lbl">Stock mínimo</label>
+            <input formControlName="stock_minimo" class="pf-inp" type="number" placeholder="10" />
+          </div>
+        </div>
+
+        <div class="pf-row">
+          <div class="pf-fld">
+            <label class="pf-lbl">Stock máximo</label>
+            <input formControlName="stock_maximo" class="pf-inp" type="number" placeholder="500" />
+          </div>
+          <div class="pf-fld">
+            <label class="pf-lbl">Días alerta vencimiento</label>
+            <input formControlName="dias_para_alerta_vencimiento" class="pf-inp" type="number" placeholder="30" />
+          </div>
+        </div>
+
+        <div class="pf-fld pf-full">
+          <label class="pf-lbl">Descripción corta</label>
+          <input formControlName="descripcion_corta" class="pf-inp" placeholder="Descripción breve del producto..." />
+        </div>
+
+        <div *ngIf="error" class="pf-srv-err">
+          <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ error }}
+        </div>
+
+      </div>
+
+      <div class="pf-ftr">
+        <button type="button" class="pf-btn pf-btn-ghost" (click)="close.emit()">Cancelar</button>
+        <button type="submit" class="pf-btn pf-btn-primary" [disabled]="saving">
+          <svg *ngIf="saving" class="pf-spin" fill="none" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="10"/>
+          </svg>
+          {{ saving ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Crear producto') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

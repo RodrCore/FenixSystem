@@ -1,0 +1,77 @@
+<div class="tab-loading" *ngIf="loading">
+  <div class="skel" style="height:90px"></div>
+  <div class="skel" style="height:280px"></div>
+</div>
+
+<ng-container *ngIf="!loading && data">
+  <div class="kpis-grid">
+    <app-kpi-card
+      label="Preventistas activos"
+      [value]="data.kpis.total_preventistas_activos"
+      color="#D97706" />
+    <app-kpi-card
+      label="Repartidores activos"
+      [value]="data.kpis.total_repartidores_activos"
+      color="#059669" />
+    <app-kpi-card
+      *ngIf="data.kpis.mejor_vendedor"
+      label="Mejor vendedor"
+      [value]="data.kpis.mejor_vendedor.nombre"
+      [subtext]="'Bs ' + fmtBs(data.kpis.mejor_vendedor.total_vendido)"
+      color="#7C3AED" />
+    <app-kpi-card
+      *ngIf="data.kpis.mejor_repartidor"
+      label="Mejor repartidor"
+      [value]="data.kpis.mejor_repartidor.nombre"
+      [subtext]="data.kpis.mejor_repartidor.entregas + ' entregas'"
+      color="#0891B2" />
+  </div>
+
+  <!-- Gráfico ventas por preventista -->
+  <div class="card" *ngIf="data.preventistas.length > 0">
+    <div class="card-title">Top 10 preventistas por ventas</div>
+    <div class="chart-wrap"><canvas #chartPreventistas></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Lista preventistas -->
+    <div class="card">
+      <div class="card-title">Preventistas</div>
+      <div class="user-list">
+        <div class="user-item" *ngFor="let p of data.preventistas; let i = index">
+          <div class="user-rank" [class]="rankClass(i)">{{ i + 1 }}</div>
+          <div class="user-data">
+            <div class="user-name">{{ p.nombre }}</div>
+            <div class="user-meta">
+              {{ p.cantidad_pedidos }} pedidos · Ticket prom. Bs {{ fmtBs(p.ticket_promedio) }}
+            </div>
+          </div>
+          <div class="user-value">Bs {{ fmtBs(p.total_vendido) }}</div>
+        </div>
+        <div *ngIf="data.preventistas.length === 0" class="empty" style="padding:20px;text-align:center">
+          Sin preventistas con actividad
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista repartidores -->
+    <div class="card">
+      <div class="card-title">Repartidores</div>
+      <div class="user-list">
+        <div class="user-item" *ngFor="let r of data.repartidores; let i = index">
+          <div class="user-rank" [class]="rankClass(i)">{{ i + 1 }}</div>
+          <div class="user-data">
+            <div class="user-name">{{ r.nombre }}</div>
+            <div class="user-meta">
+              {{ r.entregas }} entregas
+            </div>
+          </div>
+          <div class="user-value">Bs {{ fmtBs(r.monto_entregado) }}</div>
+        </div>
+        <div *ngIf="data.repartidores.length === 0" class="empty" style="padding:20px;text-align:center">
+          Sin repartidores con actividad
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

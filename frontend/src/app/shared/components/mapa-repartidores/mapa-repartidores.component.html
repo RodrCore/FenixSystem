@@ -1,0 +1,60 @@
+<div class="mapa-wrap" [class.fullscreen]="fullscreen" [class.compact]="!fullscreen">
+  <div #mapEl class="mapa-canvas" (click)="!fullscreen && onExpandir()"></div>
+
+  <!-- Header overlay -->
+  <div class="mapa-header" *ngIf="!fullscreen">
+    <span class="mh-title">{{ titulo }}</span>
+    <span class="mh-online">
+      <span class="mh-dot"></span>
+      {{ repartidores.size }} en ruta
+    </span>
+  </div>
+
+  <!-- Botón cerrar fullscreen -->
+  <button *ngIf="fullscreen" class="btn-cerrar" (click)="onCerrar()" aria-label="Cerrar">
+    <svg
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+    >
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  </button>
+
+  <!-- Panel lateral en fullscreen con info de repartidores -->
+  <div class="mapa-side-panel" *ngIf="fullscreen && repartidoresList.length">
+    <div class="msp-title">Repartidores activos</div>
+    <div class="msp-item" *ngFor="let r of repartidoresList" (click)="centrarEn(r)">
+      <div class="msp-avatar">{{ initials(r.nombres) }}</div>
+      <div class="msp-info">
+        <div class="msp-name">{{ r.nombres }}</div>
+        <div class="msp-time">Actualizado {{ tiempoTranscurrido(r.ultima_actualizacion) }}</div>
+      </div>
+      <div class="msp-pulse"></div>
+    </div>
+  </div>
+
+  <!-- Botón expandir (en modo compact) -->
+  <button
+    class="btn-expand"
+    *ngIf="!fullscreen"
+    (click)="onExpandir($event)"
+    aria-label="Pantalla completa"
+  >
+    <svg
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+    >
+      <path d="M4 4h6M4 4v6M20 4h-6M20 4v6M4 20h6M4 20v-6M20 20h-6M20 20v-6" />
+    </svg>
+  </button>
+</div>

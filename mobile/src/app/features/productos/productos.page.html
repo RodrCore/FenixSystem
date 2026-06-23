@@ -1,0 +1,172 @@
+<!-- mobile/src/app/features/productos/productos.page.html -->
+
+<app-navbar titulo="Productos" />
+
+<ion-content [fullscreen]="true">
+  <div class="page-content">
+
+    <!-- Búsqueda -->
+    <div class="search-wrap">
+      <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        viewBox="0 0 24 24" width="16" height="16" class="search-icon" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input [formControl]="buscarCtrl" placeholder="Buscar producto..."
+        class="search-input" type="search" />
+    </div>
+
+    <!-- Categorías -->
+    <div class="cats-scroll">
+      <button class="cat-chip" [class.active]="categoriaActiva===0" (click)="filtrarCategoria(0)">
+        Todos
+      </button>
+      <button class="cat-chip" *ngFor="let c of categorias"
+        [class.active]="categoriaActiva===c.id" (click)="filtrarCategoria(c.id)">
+        {{ c.nombre }}
+      </button>
+    </div>
+
+    <!-- Skeleton -->
+    <div class="prod-list" *ngIf="loading">
+      <div class="skeleton-row" style="height:72px" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <!-- Lista de productos (fila, no grid) -->
+    <div class="prod-list" *ngIf="!loading">
+      <div *ngIf="!productos.length" class="empty-full">
+        <p>Sin productos</p>
+      </div>
+
+      <div class="prod-row" *ngFor="let p of productos" (click)="abrirDetalle(p)"
+        [class.prod-inactivo]="!p.activo">
+
+        <!-- Imagen -->
+        <div class="pr-thumb">
+          <img *ngIf="p.imagen_url" [src]="p.imagen_url" [alt]="p.nombre" loading="lazy" />
+          <svg *ngIf="!p.imagen_url" fill="none" stroke="currentColor" stroke-width="1.5"
+            viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M15 8h.01"/>
+            <path d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6z"/>
+            <path d="M3 16l5-5c.928-.893 2.072-.893 3 0l4 4"/>
+          </svg>
+        </div>
+
+        <!-- Info -->
+        <div class="pr-info">
+          <div class="pr-nombre">{{ p.nombre }}</div>
+          <div class="pr-cat">{{ p.categoria?.nombre }} · {{ p.marca }}</div>
+          <div class="pr-stock">
+            <span class="pr-stock-dot" [style.background]="stockColor(p)"></span>
+            <span [style.color]="stockColor(p)" style="font-size:10px;font-weight:500">
+              {{ stockLabel(p) }}
+            </span>
+            <span style="font-size:10px;color:#94A3B8;margin-left:4px">
+              {{ p.stock_total ?? 0 | number }} uds
+            </span>
+          </div>
+        </div>
+
+        <!-- Precio + acciones -->
+        <div class="pr-right">
+          <div class="pr-precio" *ngIf="p.presentaciones?.length">
+            Bs {{ p.presentaciones![0].precio_venta | number:'1.2-2' }}
+          </div>
+          <div class="pr-actions" *ngIf="puedeEditar">
+            <button class="pr-btn pr-btn-edit" (click)="editar(p, $event)"
+              aria-label="Editar">
+              <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                <path d="M7 7h-1a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/>
+                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97l-8.415 8.385v3h3l8.385-8.415z"/>
+              </svg>
+            </button>
+            <button class="pr-btn" [class.pr-btn-danger]="p.activo"
+              [class.pr-btn-success]="!p.activo"
+              (click)="eliminar(p, $event)"
+              [attr.aria-label]="p.activo ? 'Desactivar' : 'Activar'">
+              <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                <path d="M12 3a4 4 0 0 1 4 4v4a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4"/>
+                <path d="M6.6 16.6a9 9 0 1 0 10.8 0"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ion-infinite-scroll (ionInfinite)="cargarMas($event)" [disabled]="page >= totalPages">
+      <ion-infinite-scroll-content loadingText="Cargando..."></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+
+  </div>
+</ion-content>
+
+<!-- Modal detalle del producto -->
+<div class="modal-overlay" *ngIf="showDetalle" (click)="cerrarDetalle()"></div>
+<div class="bottom-sheet" *ngIf="showDetalle && productoSeleccionado">
+  <div class="bs-handle"></div>
+
+  <div class="bs-img">
+    <img *ngIf="productoSeleccionado.imagen_url"
+      [src]="productoSeleccionado.imagen_url" [alt]="productoSeleccionado.nombre" />
+    <div *ngIf="!productoSeleccionado.imagen_url" class="bs-img-ph">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
+        width="32" height="32" aria-hidden="true">
+        <path d="M15 8h.01"/>
+        <path d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6z"/>
+        <path d="M3 16l5-5c.928-.893 2.072-.893 3 0l4 4"/>
+      </svg>
+      <span>Imagen próximamente</span>
+    </div>
+  </div>
+
+  <div class="bs-content">
+    <div class="bs-badges">
+      <span class="bs-cat">{{ productoSeleccionado.categoria?.nombre }}</span>
+      <span class="bs-estado" [class.activo]="productoSeleccionado.activo"
+        [class.inactivo]="!productoSeleccionado.activo">
+        {{ productoSeleccionado.activo ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+
+    <h2 class="bs-nombre">{{ productoSeleccionado.nombre }}</h2>
+    <p class="bs-marca" *ngIf="productoSeleccionado.marca">{{ productoSeleccionado.marca }}</p>
+    <p class="bs-codigo" *ngIf="productoSeleccionado.codigo_interno">
+      Código: {{ productoSeleccionado.codigo_interno }}
+    </p>
+
+    <!-- Stock -->
+    <div class="bs-stock">
+      <span class="bs-stock-dot" [style.background]="stockColor(productoSeleccionado)"></span>
+      <span [style.color]="stockColor(productoSeleccionado)" style="font-weight:500">
+        {{ stockLabel(productoSeleccionado) }}
+      </span>
+      <span class="bs-stock-num">
+        {{ productoSeleccionado.stock_total ?? 0 | number }} unidades disponibles
+      </span>
+    </div>
+
+    <!-- Presentaciones -->
+    <div class="bs-section" *ngIf="productoSeleccionado.presentaciones?.length">
+      <div class="bs-section-lbl">Presentaciones y precios</div>
+      <div class="bs-pres-row" *ngFor="let pres of productoSeleccionado.presentaciones">
+        <div>
+          <div class="bs-pres-nombre">{{ pres.nombre }}</div>
+          <div class="bs-pres-uds">{{ pres.unidades_equivalentes }} unidades</div>
+        </div>
+        <div style="text-align:right">
+          <div class="bs-pres-precio">Bs {{ pres.precio_venta | number:'1.2-2' }}</div>
+          <div class="bs-pres-mayoreo" *ngIf="pres.precio_mayoreo">
+            Mayoreo: Bs {{ pres.precio_mayoreo | number:'1.2-2' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón cerrar -->
+    <button class="bs-close-btn" (click)="cerrarDetalle()">Cerrar</button>
+  </div>
+</div>
+
+<app-tabbar tab="productos" />

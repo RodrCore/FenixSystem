@@ -1,0 +1,90 @@
+<!-- src/app/features/login/login.page.html -->
+
+<ion-content [fullscreen]="true" class="login-content">
+
+  <div class="login-wrapper">
+
+    <!-- Logo y nombre -->
+    <div class="login-header">
+      <div class="login-logo">
+        <svg fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round"
+          stroke-linejoin="round" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+          <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/>
+          <path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"/>
+          <path d="M19 11h2m-1 -1v2"/>
+        </svg>
+      </div>
+      <h1 class="login-title">FenixBd</h1>
+      <p class="login-sub">Sistema de Gestión Comercial</p>
+    </div>
+
+    <!-- Card del formulario -->
+    <div class="login-card">
+
+      <form [formGroup]="form" (ngSubmit)="onLogin()" novalidate>
+
+        <!-- Email -->
+        <div class="field">
+          <label class="field-label">Email</label>
+          <div class="field-wrap" [class.field-err]="form.get('email')?.touched && form.get('email')?.invalid">
+            <ion-icon name="mail-outline" class="field-icon" aria-hidden="true"></ion-icon>
+            <input
+              formControlName="email"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder="tu@empresa.com"
+              class="field-input"
+            />
+          </div>
+          <span *ngIf="emailErr" class="field-error">{{ emailErr }}</span>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="field">
+          <label class="field-label">Contraseña</label>
+          <div class="field-wrap" [class.field-err]="form.get('password')?.touched && form.get('password')?.invalid">
+            <ion-icon name="lock-closed-outline" class="field-icon" aria-hidden="true"></ion-icon>
+            <input
+              formControlName="password"
+              [type]="showPw ? 'text' : 'password'"
+              autocomplete="current-password"
+              placeholder="••••••••"
+              class="field-input"
+            />
+            <button type="button" class="pw-toggle" (click)="togglePw()"
+              [attr.aria-label]="showPw ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+              <ion-icon [name]="showPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+          <span *ngIf="passwordErr" class="field-error">{{ passwordErr }}</span>
+        </div>
+
+        <!-- Error servidor -->
+        <div *ngIf="error" class="srv-error">
+          <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ error }}
+        </div>
+
+        <!-- Botón -->
+        <button type="submit" class="btn-login" [disabled]="loading">
+          <ion-spinner *ngIf="loading" name="crescent" class="btn-spinner"></ion-spinner>
+          <ion-icon *ngIf="!loading" name="log-in-outline" aria-hidden="true"></ion-icon>
+          {{ loading ? 'Ingresando...' : 'Ingresar al sistema' }}
+        </button>
+
+      </form>
+
+    </div>
+
+    <!-- Footer -->
+    <p class="login-footer">© 2026 FenixBd · v1.0.0</p>
+
+  </div>
+
+</ion-content>

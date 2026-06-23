@@ -1,0 +1,419 @@
+<app-navbar titulo="FenixBd" [mostrarPerfil]="true" />
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="page-content">
+    <!-- Saludo común -->
+    <div class="greet-section">
+      <h2 class="greet-title">Hola, {{ nombreUsuario }} 👋</h2>
+      <p class="greet-sub">
+        {{ today | date:'EEEE d MMM':'':'es' | titlecase }} · Potosí
+      </p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         PREVENTISTA
+    ═══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="esPreventista && !loading">
+      <!-- Card ventas hoy -->
+      <div class="sales-card">
+        <div class="sc-label">Ventas hoy</div>
+        <div class="sc-amount">
+          Bs {{ (ventasData?.ventas_hoy ?? 0) | number:'1.2-2' }}
+        </div>
+        <div
+          class="sc-delta"
+          [class.positivo]="deltaPositivo"
+          [class.negativo]="!deltaPositivo"
+        >
+          {{ deltaPositivo ? '+' : '' }}{{ deltaVentas | number:'1.1-1' }}% vs
+          ayer
+        </div>
+      </div>
+
+      <!-- Acciones rápidas -->
+      <div class="quick-grid">
+        <button class="quick-btn quick-red" (click)="irA('/ventas/nueva')">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            aria-hidden="true"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Nueva venta</span>
+        </button>
+        <button class="quick-btn quick-blue" (click)="irA('/clientes')">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            aria-hidden="true"
+          >
+            <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+            <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+          </svg>
+          <span>Clientes</span>
+        </button>
+      </div>
+
+      <!-- Lista de 5 ventas recientes -->
+      <div class="section-hdr">
+        <span class="section-title">Mis últimas ventas</span>
+        <button class="section-link" (click)="irA('/ventas')">Ver todas</button>
+      </div>
+
+      <div *ngIf="!ventasRecientes.length" class="empty-state">
+        <p>Sin ventas registradas</p>
+      </div>
+      <!-- Después de las acciones rápidas, antes de "Mis últimas ventas" -->
+      <button class="btn-reportes-rect" (click)="irA('/reportes')">
+        <div
+          class="brr-icon"
+          style="background: rgba(124, 58, 237, 0.1); color: #7c3aed"
+        >
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+            <path
+              d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"
+            />
+            <path d="M9 17v-1m3 1v-3m3 3v-5" />
+          </svg>
+        </div>
+        <div class="brr-info">
+          <div class="brr-title">Mis reportes</div>
+          <div class="brr-sub">Reporte mensual de ventas</div>
+        </div>
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          style="color: #cbd5e1"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+
+      <div
+        class="pedido-card"
+        *ngFor="let p of ventasRecientes"
+        (click)="router.navigate(['/ventas/detalle', p.id])"
+      >
+        <div class="pc-left">
+          <div class="pc-nombre">{{ p.cliente?.razon_social ?? '–' }}</div>
+          <div class="pc-time">
+            {{ p.created_at | date:'HH:mm' }} · {{ p.numero }}
+          </div>
+        </div>
+        <div class="pc-right">
+          <div class="pc-amount">Bs {{ p.total | number:'1.2-2' }}</div>
+          <span
+            class="pc-status"
+            [style.color]="estadoColor(p.estado)"
+            [style.background]="estadoColor(p.estado) + '15'"
+          >
+            {{ p.estado | replace:'_':' ' }}
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════
+         REPARTIDOR
+    ═══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="esRepartidor && !loading">
+      <!-- Mini stats -->
+      <div class="rep-stats">
+        <div class="rep-stat-card">
+          <div class="rs-num" style="color: #2563eb">
+            {{ entregasStats.pendientes }}
+          </div>
+          <div class="rs-lbl">Pendientes</div>
+        </div>
+        <div class="rep-stat-card">
+          <div class="rs-num" style="color: #0891b2">
+            {{ entregasStats.en_ruta }}
+          </div>
+          <div class="rs-lbl">En ruta</div>
+        </div>
+        <div class="rep-stat-card">
+          <div class="rs-num" style="color: #059669">
+            {{ entregasStats.entregados_hoy }}
+          </div>
+          <div class="rs-lbl">Entregados</div>
+        </div>
+      </div>
+
+      <!-- Mini mapa preview -->
+      <button
+        class="mini-mapa-btn"
+        (click)="irA('/repartidor/mapa')"
+        *ngIf="misEntregas.length"
+      >
+        <div class="mm-preview">
+          <svg
+            fill="none"
+            stroke="white"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="32"
+            height="32"
+            aria-hidden="true"
+          >
+            <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+            <path
+              d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+            />
+          </svg>
+        </div>
+        <div class="mm-info">
+          <div class="mm-title">Ver mapa de entregas</div>
+          <div class="mm-sub">
+            Optimizar ruta · {{ misEntregas.length }} pedidos
+          </div>
+        </div>
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          style="margin-left: auto; color: #94a3b8"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+      <!-- Después del botón "Ver mapa de entregas", antes de "Próximas entregas" -->
+      <button class="btn-reportes-rect" (click)="irA('/reportes')">
+        <div
+          class="brr-icon"
+          style="background: rgba(124, 58, 237, 0.1); color: #7c3aed"
+        >
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+            <path
+              d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"
+            />
+            <path d="M9 17v-1m3 1v-3m3 3v-5" />
+          </svg>
+        </div>
+        <div class="brr-info">
+          <div class="brr-title">Mis reportes</div>
+          <div class="brr-sub">Reporte mensual de entregas</div>
+        </div>
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          style="color: #cbd5e1"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+      <!-- Lista de entregas -->
+      <div class="section-hdr">
+        <span class="section-title">Próximas entregas</span>
+        <button class="section-link" (click)="irA('/repartidor/entregas')">
+          Ver todas
+        </button>
+      </div>
+
+      <div *ngIf="!misEntregas.length" class="empty-state">
+        <p>Sin entregas asignadas</p>
+      </div>
+
+      <div
+        class="entrega-card"
+        *ngFor="let p of misEntregas; let i = index"
+        (click)="router.navigate(['/ventas/detalle', p.id])"
+      >
+        <div class="ec-num-badge">{{ i + 1 }}</div>
+        <div class="ec-info">
+          <div class="ec-header">
+            <span class="ec-pedido">{{ p.numero }}</span>
+            <span
+              class="ec-estado"
+              [style.color]="estadoColor(p.estado)"
+              [style.background]="estadoColor(p.estado) + '15'"
+            >
+              {{ p.estado | replace:'_':' ' }}
+            </span>
+          </div>
+          <div class="ec-cliente">{{ p.cliente?.razon_social }}</div>
+          <div class="ec-bottom">
+            <span class="ec-total">Bs {{ p.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ADMIN / SUPER_ADMIN
+    ═══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="esAdmin && !loading">
+      <!-- Acciones rápidas -->
+      <div class="quick-grid">
+        <button class="quick-btn quick-red" (click)="irA('/ventas')">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <path
+              d="M9 5h-2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-2"
+            />
+            <path
+              d="M9 3m0 2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"
+            />
+          </svg>
+          <span>Ventas</span>
+        </button>
+        <button class="quick-btn quick-blue" (click)="irA('/usuarios')">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0" />
+            <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Usuarios</span>
+        </button>
+      </div>
+
+      <!-- Sección: últimas ventas de preventistas -->
+      <div class="section-hdr">
+        <span class="section-title">Últimas ventas</span>
+        <button class="section-link" (click)="irA('/ventas')">Ver todas</button>
+      </div>
+
+      <div *ngIf="!ventasAdmin.length" class="empty-state">
+        <p>Sin ventas registradas</p>
+      </div>
+
+      <div
+        class="pedido-card"
+        *ngFor="let p of ventasAdmin"
+        (click)="router.navigate(['/ventas/detalle', p.id])"
+      >
+        <div class="pc-left">
+          <div class="pc-nombre">{{ p.cliente?.razon_social ?? '–' }}</div>
+          <div class="pc-time">
+            <span *ngIf="p.preventista"> {{ p.preventista.nombres }} · </span>
+            {{ p.created_at | date:'HH:mm' }}
+          </div>
+        </div>
+        <div class="pc-right">
+          <div class="pc-amount">Bs {{ p.total | number:'1.2-2' }}</div>
+          <span
+            class="pc-status"
+            [style.color]="estadoColor(p.estado)"
+            [style.background]="estadoColor(p.estado) + '15'"
+          >
+            {{ p.estado | replace:'_':' ' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Sección: últimas entregas de repartidores -->
+      <div class="section-hdr" style="margin-top: 18px">
+        <span class="section-title">Últimas entregas</span>
+      </div>
+
+      <div *ngIf="!entregasAdmin.length" class="empty-state">
+        <p>Sin entregas registradas</p>
+      </div>
+
+      <div
+        class="pedido-card"
+        *ngFor="let p of entregasAdmin"
+        (click)="router.navigate(['/ventas/detalle', p.id])"
+      >
+        <div class="pc-left">
+          <div class="pc-nombre">{{ p.cliente?.razon_social ?? '–' }}</div>
+          <div class="pc-time">
+            <span *ngIf="p.repartidor"> {{ p.repartidor.nombres }} · </span>
+            {{ p.fecha_entrega_real | date:'dd MMM HH:mm':'':'es' }}
+          </div>
+        </div>
+        <div class="pc-right">
+          <div class="pc-amount">Bs {{ p.total | number:'1.2-2' }}</div>
+          <span
+            class="pc-status"
+            [style.color]="estadoColor(p.estado)"
+            [style.background]="estadoColor(p.estado) + '15'"
+          >
+            {{ p.estado | replace:'_':' ' }}
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Skeleton común -->
+    <ng-container *ngIf="loading">
+      <div
+        class="skeleton-row"
+        style="height: 120px; margin-bottom: 12px"
+      ></div>
+      <div class="skeleton-row" style="height: 60px; margin-bottom: 12px"></div>
+      <div class="skeleton-row" style="height: 60px"></div>
+    </ng-container>
+  </div>
+</ion-content>
+
+<app-tabbar tab="dashboard" />

@@ -1,0 +1,300 @@
+<!-- Overlay -->
+<div class="modal-backdrop" (click)="cancelar()"></div>
+
+<div class="modal-nuevo">
+  <!-- HEADER -->
+  <div class="mn-header">
+    <div>
+      <div class="mn-title">Nueva venta</div>
+      <div class="mn-sub">Crear un nuevo pedido</div>
+    </div>
+    <button class="mn-close" (click)="cancelar()" aria-label="Cerrar">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="18" height="18">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- BODY -->
+  <div class="mn-body">
+
+    <!-- ═══════════════════════════════
+         SECCIÓN 1: CLIENTE
+    ═══════════════════════════════ -->
+    <div class="mn-section">
+      <div class="mn-section-title">
+        Cliente <span class="req">*</span>
+      </div>
+
+      <!-- Cliente seleccionado -->
+      <div *ngIf="cliente" class="cliente-selected">
+        <div class="cs-info">
+          <div class="cs-name">{{ cliente.razon_social }}</div>
+          <div class="cs-meta">
+            <span *ngIf="cliente.contacto_telefono">{{ cliente.contacto_telefono }}</span>
+            <span *ngIf="cliente.direccion_calle"> · {{ cliente.direccion_calle }}</span>
+          </div>
+        </div>
+        <button class="cs-quitar" (click)="quitarCliente()" title="Quitar">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Buscador de cliente -->
+      <div *ngIf="!cliente" class="busqueda-wrap">
+        <div class="bw-search">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input [formControl]="busquedaClienteCtrl"
+            placeholder="Buscar cliente por nombre, comercial o teléfono..."
+            class="bw-input" />
+        </div>
+
+        <!-- Resultados -->
+        <div class="bw-resultados" *ngIf="resultadosClientes.length">
+          <div class="bw-item" *ngFor="let c of resultadosClientes"
+            (click)="seleccionarCliente(c)">
+            <div class="bwi-info">
+              <div class="bwi-name">{{ c.razon_social }}</div>
+              <div class="bwi-meta">
+                <span *ngIf="c.nombre_comercial">{{ c.nombre_comercial }}</span>
+                <span *ngIf="c.contacto_telefono"> · {{ c.contacto_telefono }}</span>
+              </div>
+            </div>
+            <svg fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </div>
+        </div>
+
+        <div *ngIf="buscandoClientes" class="bw-loading">Buscando clientes...</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════
+         SECCIÓN 2: PRODUCTOS
+    ═══════════════════════════════ -->
+    <div class="mn-section">
+      <div class="mn-section-title">
+        Productos <span class="req">*</span>
+        <span class="mn-counter" *ngIf="detalles.length">
+          ({{ detalles.length }})
+        </span>
+      </div>
+
+      <!-- Lista de productos del pedido -->
+      <div class="productos-table" *ngIf="detalles.length">
+        <div class="pt-header">
+          <div>PRODUCTO</div>
+          <div class="pt-center">CANT.</div>
+          <div class="pt-right">PRECIO</div>
+          <div class="pt-right">SUBTOTAL</div>
+          <div></div>
+        </div>
+
+        <div class="pt-row" *ngFor="let d of detalles"
+          [class.sin-stock]="d.sin_stock">
+          <div class="pt-info">
+            <div class="pt-name">{{ d.producto_nombre }}</div>
+            <div class="pt-pres">
+              {{ d.presentacion_nombre }}
+              <span *ngIf="d.sin_stock" class="badge-sin-stock">SIN STOCK</span>
+              <span *ngIf="!d.sin_stock" class="stock-label">
+                · {{ d.stock_disponible }} en inventario
+              </span>
+            </div>
+          </div>
+
+          <div class="pt-cant-controls">
+            <button class="pt-btn" (click)="cambiarCantidad(d, -1)"
+              [disabled]="d.cantidad <= 1">
+              <svg fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" viewBox="0 0 24 24" width="12" height="12">
+                <path d="M5 12h14"/>
+              </svg>
+            </button>
+            <input type="number" class="pt-cant"
+              [value]="d.cantidad"
+              (change)="setCantidad(d, $any($event.target).value)" min="1" />
+            <button class="pt-btn" (click)="cambiarCantidad(d, 1)">
+              <svg fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" viewBox="0 0 24 24" width="12" height="12">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="pt-precio">Bs {{ d.precio_unitario | number:'1.2-2' }}</div>
+          <div class="pt-sub">Bs {{ d.subtotal | number:'1.2-2' }}</div>
+
+          <button class="pt-quitar" (click)="quitarProducto(d)" title="Quitar">
+            <svg fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" viewBox="0 0 24 24" width="13" height="13">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Advertencia stock -->
+      <div class="warn-sin-stock" *ngIf="hayProductosSinStock">
+        <svg fill="none" stroke="currentColor" stroke-width="1.75"
+          stroke-linecap="round" stroke-linejoin="round"
+          viewBox="0 0 24 24" width="14" height="14">
+          <path d="M12 9v4M12 17h.01"/>
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        </svg>
+        Hay productos sin stock disponible. La venta se creará pero requerirá reposición.
+      </div>
+
+      <div *ngIf="!detalles.length" class="empty-prods">
+        Aún no hay productos. Busca y agrega productos abajo.
+      </div>
+
+      <!-- Buscador de productos -->
+      <div class="busqueda-wrap" style="margin-top: 12px">
+        <div class="bw-search">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input [formControl]="busquedaProductoCtrl"
+            placeholder="Buscar producto para agregar..."
+            class="bw-input" />
+        </div>
+
+        <div class="bw-resultados" *ngIf="resultadosProductos.length">
+          <div class="bw-prod" *ngFor="let p of resultadosProductos">
+            <div class="bwp-info">
+              <div class="bwp-name">
+                {{ p.nombre }}
+                <span class="bwp-stock" *ngIf="(p.stock_total ?? 0) > 0">
+                  · {{ p.stock_total }} disponibles
+                </span>
+                <span class="bwp-sin-stock" *ngIf="(p.stock_total ?? 0) <= 0">
+                  · SIN STOCK
+                </span>
+              </div>
+              <div class="bwp-meta">{{ p.marca }} · {{ p.categoria?.nombre }}</div>
+            </div>
+            <div class="bwp-presentaciones" *ngIf="p.presentaciones?.length">
+              <button *ngFor="let pres of p.presentaciones"
+                class="bwp-btn" (click)="agregarProducto(p, pres)">
+                {{ pres.presentacion.nombre }} · Bs {{ pres.precio_venta | number:'1.2-2' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="buscandoProductos" class="bw-loading">Buscando productos...</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════
+         SECCIÓN 3: ASIGNACIÓN (OPCIONAL)
+    ═══════════════════════════════ -->
+    <div class="mn-section">
+      <div class="mn-section-title">
+        Asignación <span class="optional">(opcional)</span>
+      </div>
+
+      <div class="mn-grid">
+        <div class="mn-fld">
+          <label>Repartidor</label>
+          <select [(ngModel)]="repartidorId" class="mn-input">
+            <option [ngValue]="null">— Asignar después —</option>
+            <option *ngFor="let r of repartidores" [ngValue]="r.id">
+              {{ r.nombres }} {{ r.apellido_paterno }}
+            </option>
+          </select>
+        </div>
+
+        <div class="mn-fld">
+          <label>Vehículo</label>
+          <select [(ngModel)]="vehiculoId" class="mn-input">
+            <option [ngValue]="null">— Asignar después —</option>
+            <option *ngFor="let v of vehiculos" [ngValue]="v.id">
+              {{ v.matricula }} · {{ v.marca }} {{ v.modelo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="mn-fld">
+          <label>Fecha de entrega</label>
+          <input type="date" [(ngModel)]="fechaEntrega" class="mn-input" />
+        </div>
+
+        <div class="mn-fld">
+          <label>Método de pago</label>
+          <select [(ngModel)]="metodoPago" class="mn-input">
+            <option *ngFor="let m of metodosPago" [value]="m.v">{{ m.n }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════
+         SECCIÓN 4: NOTAS
+    ═══════════════════════════════ -->
+    <div class="mn-section">
+      <div class="mn-section-title">Notas <span class="optional">(opcional)</span></div>
+      <textarea [(ngModel)]="notas" class="mn-textarea" rows="2"
+        placeholder="Observaciones del pedido..."></textarea>
+    </div>
+
+    <!-- ═══════════════════════════════
+         SECCIÓN 5: TOTALES
+    ═══════════════════════════════ -->
+    <div class="mn-section">
+      <div class="mn-section-title">Totales</div>
+      <div class="mn-totales">
+        <div class="mt-row">
+          <span>Subtotal</span>
+          <span>Bs {{ subtotal | number:'1.2-2' }}</span>
+        </div>
+        <div class="mt-row">
+          <span>Descuento</span>
+          <input type="number" [(ngModel)]="descuento"
+            class="mn-input-inline" min="0" [max]="subtotal" />
+        </div>
+        <div class="mt-row mt-total">
+          <span>TOTAL</span>
+          <span class="mt-amount">Bs {{ total | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" *ngIf="errorMsg">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      {{ errorMsg }}
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="mn-footer">
+    <button class="btn btn-ghost" (click)="cancelar()" [disabled]="guardando">
+      Cancelar
+    </button>
+    <button class="btn btn-primary" (click)="guardar()"
+      [disabled]="guardando || !esFormValido">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M5 12l5 5l10-10"/>
+      </svg>
+      {{ guardando ? 'Creando...' : 'Crear pedido' }}
+    </button>
+  </div>
+</div>

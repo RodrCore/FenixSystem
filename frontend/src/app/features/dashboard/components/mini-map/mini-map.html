@@ -1,0 +1,61 @@
+<!-- Stats arriba del mapa -->
+<div class="mm-stats">
+  <div class="mm-stat" [class.mm-stat-zero]="enTransito === 0">
+    <span class="mm-dot" style="background: #059669"></span>
+    <span class="mm-label">En tránsito</span>
+    <span class="mm-count">({{ enTransito }})</span>
+  </div>
+
+  <div class="mm-stat" [class.mm-stat-zero]="detenidos === 0">
+    <span class="mm-dot" style="background: #D97706"></span>
+    <span class="mm-label">Detenido</span>
+    <span class="mm-count">({{ detenidos }})</span>
+  </div>
+
+  <div class="mm-stat" [class.mm-stat-zero]="retrasados === 0">
+    <span class="mm-dot" style="background: #DC2626"></span>
+    <span class="mm-label">Retrasado</span>
+    <span class="mm-count">({{ retrasados }})</span>
+  </div>
+</div>
+
+<!-- Contenedor del mapa -->
+<div id="mini-map" class="mm-canvas"
+  (click)="abrirFullscreen()"
+  title="Click para ver en pantalla completa">
+</div>
+
+<!-- ══ MODAL FULLSCREEN ══ -->
+<div class="mm-fullscreen-overlay" *ngIf="fullscreen">
+  <div class="mm-fs-header">
+    <div>
+      <div class="mm-fs-title">Rutas activas en tiempo real</div>
+      <div class="mm-fs-sub">Potosí, Bolivia</div>
+    </div>
+    <div class="mm-stats" style="margin: 0;">
+      <div class="mm-stat">
+        <span class="mm-dot" style="background: #059669"></span>
+        <span class="mm-label">En tránsito</span>
+        <span class="mm-count">({{ enTransito }})</span>
+      </div>
+      <div class="mm-stat">
+        <span class="mm-dot" style="background: #D97706"></span>
+        <span class="mm-label">Detenido</span>
+        <span class="mm-count">({{ detenidos }})</span>
+      </div>
+      <div class="mm-stat">
+        <span class="mm-dot" style="background: #DC2626"></span>
+        <span class="mm-label">Retrasado</span>
+        <span class="mm-count">({{ retrasados }})</span>
+      </div>
+    </div>
+    <button class="mm-fs-close" (click)="cerrarFullscreen()" aria-label="Cerrar">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        viewBox="0 0 24 24" width="20" height="20">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="mini-map-fullscreen" class="mm-canvas-fullscreen"></div>
+</div>

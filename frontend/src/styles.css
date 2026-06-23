@@ -1,0 +1,227 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+@theme {
+  --color-candy-bg: #f8fafc;
+  --color-candy-surface: #ffffff;
+  --color-candy-sidebar: #eef2f7;
+  --color-candy-primary: #e11d48;
+  --color-candy-success: #10b981;
+  --color-candy-warning: #f59e0b;
+  --color-candy-danger: #ef4444;
+  --color-candy-info: #3b82f6;
+  --color-candy-text: #0f172a;
+  --color-candy-muted: #64748b;
+  --color-candy-border: #e2e8f0;
+
+  /* Dark separadas — para usar en estilos inline con var() */
+  --color-candy-dark-bg: #0f0f1a;
+  --color-candy-dark-surface: #1a1a2e;
+  --color-candy-dark-sidebar: #13131f;
+  --color-candy-dark-text: #f1f5f9;
+  --color-candy-dark-muted: #94a3b8;
+  --color-candy-dark-border: rgba(255, 255, 255, 0.08);
+
+  --shadow-card: 0 4px 24px rgba(15, 23, 42, 0.06);
+  --shadow-modal: 0 8px 40px rgba(15, 23, 42, 0.12);
+}
+
+/* ══════════════════════════════════════════════════════════
+   VARIABLES CSS GLOBALES — se usan con var() en style=""
+   Estas SÍ cambian con dark mode porque no son @theme
+══════════════════════════════════════════════════════════ */
+:root {
+  --color-candy-bg: #f8fafc;
+  --color-candy-surface: #ffffff;
+  --color-candy-sidebar: #eef2f7;
+  --color-candy-primary: #c83d5b;
+  --color-candy-success: #10b981;
+  --color-candy-warning: #f59e0b;
+  --color-candy-danger: #ef4444;
+  --color-candy-info: #3b82f6;
+  --color-candy-text: #0f172a;
+  --color-candy-muted: #64748b;
+  --color-candy-border: #e2e8f0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DARK MODE — reemplaza las variables base cuando .dark
+   está en <html>. Todos los componentes que usen
+   var(--color-candy-*) cambian automáticamente.
+══════════════════════════════════════════════════════════ */
+:root.dark {
+  --color-candy-bg: #0f0f1a;
+  --color-candy-surface: #1a1a2e;
+  --color-candy-sidebar: #13131f;
+  --color-candy-text: #f1f5f9;
+  --color-candy-muted: #94a3b8;
+  --color-candy-border: rgba(255, 255, 255, 0.08);
+
+  /* Primary, success, warning, danger, info
+     no cambian — son los mismos en ambos temas */
+}
+
+/* ══════════════════════════════════════════════════════════
+   ESTILOS BASE GLOBALES
+══════════════════════════════════════════════════════════ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--color-candy-bg);
+  color: var(--color-candy-text);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Scrollbar global delgado */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 999px;
+}
+:root.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ══════════════════════════════════════════════════════════
+   COMPONENTES GLOBALES CON DARK MODE
+   Clases usadas en layout.html con style="" inline
+══════════════════════════════════════════════════════════ */
+
+/* Sidebar item activo */
+.sb-active {
+  background-color: rgba(96, 165, 250, 0.1) !important;
+  color: #2563eb !important;
+  border-left-color: #2563eb !important;
+  font-weight: 500 !important;
+}
+:root.dark .sb-active {
+  background-color: rgba(96, 165, 250, 0.15) !important;
+  color: #93c5fd !important;
+  border-left-color: #60a5fa !important;
+}
+
+/* Sidebar item hover */
+.sb-item:hover:not(.sb-active) {
+  background-color: rgba(15, 23, 42, 0.05);
+  color: #0f172a;
+}
+:root.dark .sb-item:hover:not(.sb-active) {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Inputs globales */
+input,
+select,
+textarea {
+  color-scheme: light;
+}
+:root.dark input,
+:root.dark select,
+:root.dark textarea {
+  color-scheme: dark;
+}
+
+/* Leaflet dark mode — tiles más oscuros */
+:root.dark .leaflet-tile {
+  filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+/* Leaflet popup dark */
+:root.dark .leaflet-popup-content-wrapper {
+  background: var(--color-candy-surface);
+  color: var(--color-candy-text);
+  border: 0.5px solid var(--color-candy-border);
+}
+:root.dark .leaflet-popup-tip {
+  background: var(--color-candy-surface);
+}
+
+/* ══════════════════════════════════════════════════════════
+   TRANSITION SUAVE AL CAMBIAR TEMA
+══════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Excluir transiciones en elementos que no deben animar */
+svg,
+img,
+canvas,
+video {
+  transition: none !important;
+}
+
+.custom-marker-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.pedido-marker {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.repartidor-marker {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rm-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.4);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.rm-dot {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #7c3aed;
+  color: white;
+  border: 2.5px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.45);
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}

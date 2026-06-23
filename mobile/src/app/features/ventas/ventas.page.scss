@@ -1,0 +1,28 @@
+.btn-nueva-venta {
+  width: 100%;
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: #e11d48;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.pi-edit {
+  background: rgba(37, 99, 235, 0.08);
+  border: 0.5px solid rgba(37, 99, 235, 0.2);
+  color: #2563eb;
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

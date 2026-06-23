@@ -1,0 +1,130 @@
+<div class="ep-overlay" (click)="cerrar()"></div>
+
+<div class="ep-modal">
+  <div class="ep-handle"></div>
+
+  <div class="ep-header">
+    <div class="ep-title">Editar pedido</div>
+    <div class="ep-subtitle">
+      {{ pedido.numero }} · {{ pedido.cliente?.razon_social }}
+    </div>
+  </div>
+
+  <div class="ep-body">
+    <!-- VEHÍCULO -->
+    <div class="ep-section">
+      <div class="ep-sec-title">Vehículo</div>
+
+      <button
+        class="ep-pick"
+        [class.activo]="!vehiculoSel"
+        (click)="setVehiculo(null)"
+      >
+        <span>Sin vehículo</span>
+        <svg
+          *ngIf="!vehiculoSel"
+          fill="none"
+          stroke="#E11D48"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+        >
+          <path d="M5 12l5 5l10-10" />
+        </svg>
+      </button>
+
+      <button
+        class="ep-pick"
+        *ngFor="let v of vehiculos"
+        [class.activo]="vehiculoSel?.id === v.id"
+        (click)="setVehiculo(v)"
+      >
+        <div class="ep-pick-info">
+          <span class="ep-pick-name">{{ v.matricula }}</span>
+          <span class="ep-pick-sub"
+            >{{ v.marca }} {{ v.modelo }} · {{ v.color }}</span
+          >
+        </div>
+        <svg
+          *ngIf="vehiculoSel?.id === v.id"
+          fill="none"
+          stroke="#E11D48"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+        >
+          <path d="M5 12l5 5l10-10" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- REPARTIDOR -->
+    <div class="ep-section">
+      <div class="ep-sec-title">Repartidor</div>
+
+      <button
+        class="ep-pick"
+        [class.activo]="!repartidorSel"
+        (click)="setRepartidor(null)"
+      >
+        <span>Sin asignar</span>
+        <svg
+          *ngIf="!repartidorSel"
+          fill="none"
+          stroke="#E11D48"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+        >
+          <path d="M5 12l5 5l10-10" />
+        </svg>
+      </button>
+
+      <button
+        class="ep-pick"
+        *ngFor="let r of repartidores"
+        [class.activo]="repartidorSel?.id === r.id"
+        (click)="setRepartidor(r)"
+      >
+        <div class="ep-pick-info">
+          <span class="ep-pick-name"
+            >{{ r.nombres }} {{ r.apellido_paterno }}</span
+          >
+          <span class="ep-pick-sub" *ngIf="r.telefono_movil">{{
+            r.telefono_movil
+          }}</span>
+        </div>
+        <svg
+          *ngIf="repartidorSel?.id === r.id"
+          fill="none"
+          stroke="#E11D48"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+        >
+          <path d="M5 12l5 5l10-10" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="ep-actions">
+    <button class="ep-btn ep-btn-cancel" (click)="cerrar()">Cancelar</button>
+    <button
+      class="ep-btn ep-btn-save"
+      [disabled]="guardando"
+      (click)="guardar()"
+    >
+      {{ guardando ? "Guardando..." : "Guardar cambios" }}
+    </button>
+  </div>
+</div>

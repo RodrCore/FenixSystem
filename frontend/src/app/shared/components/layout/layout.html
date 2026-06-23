@@ -1,0 +1,314 @@
+<!-- src/app/shared/components/layout/layout.html — CORREGIDO PARA TAILWIND V4 -->
+
+<!-- Overlay mobile -->
+<div
+  *ngIf="mobileOpen"
+  (click)="closeMobile()"
+  class="fixed inset-0 bg-black/40 z-20 lg:hidden"
+  aria-hidden="true"
+></div>
+
+<div class="flex h-screen overflow-hidden" style="background-color: var(--color-candy-bg);">
+
+  <!-- ════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════ -->
+  <aside
+    class="fixed lg:static inset-y-0 left-0 z-30 flex flex-col w-[220px] shrink-0 transition-transform duration-200 ease-in-out lg:translate-x-0"
+    [class.-translate-x-full]="!mobileOpen"
+    [class.translate-x-0]="mobileOpen"
+    style="background-color: var(--color-candy-sidebar); border-right: 1px solid var(--color-candy-border);"
+  >
+
+    <!-- Logo -->
+    <div
+      class="flex items-center gap-2.5 h-[56px] px-4 shrink-0"
+      style="border-bottom: 1px solid var(--color-candy-border);"
+    >
+      <div class="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0"
+        style="background: linear-gradient(135deg, #60A5FA, #2563EB);">
+        <svg class="w-[15px] h-[15px]" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/>
+          <path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"/>
+          <path d="M19 11h2m-1 -1v2"/>
+        </svg>
+      </div>
+      <span class="text-[15px] font-semibold" style="color: var(--color-candy-text);">FenixBd</span>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+
+      <p class="text-[10px] font-medium uppercase tracking-widest px-2 pb-1"
+        style="color: var(--color-candy-muted);">General</p>
+
+      <ng-container *ngFor="let item of navItems">
+        <a
+          *ngIf="canSee(item)"
+          [routerLink]="item.route"
+          routerLinkActive="sb-active"
+          (click)="closeMobile()"
+          class="sb-item flex items-center gap-2.5 px-2.5 py-[7px] rounded-[8px] text-[12.5px] border-l-2 border-l-transparent transition-all duration-100 cursor-pointer no-underline"
+          style="color: var(--color-candy-muted);"
+        >
+          <ng-container [ngSwitch]="item.route">
+            <svg *ngSwitchCase="'/dashboard'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/>
+            </svg>
+            <svg *ngSwitchCase="'/pedidos'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M1 3h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2 -1.61l1.6 -8.39h-19.32"/>
+            </svg>
+            <svg *ngSwitchCase="'/inventario'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5"/><path d="M12 12l8 -4.5"/><path d="M12 12l0 9"/><path d="M12 12l-8 -4.5"/>
+            </svg>
+            <svg *ngSwitchCase="'/reabastecimiento'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M5 17h-2v-4m-1 -8h11v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5"/><path d="M3 9l4 0"/>
+            </svg>
+            <svg *ngSwitchCase="'/clientes'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/>
+            </svg>
+            <svg *ngSwitchCase="'/proveedores'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/>
+            </svg>
+          </ng-container>
+
+          <span>{{ item.label }}</span>
+
+          <span *ngIf="item.badge"
+            class="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+            style="background:rgba(37,99,235,0.10);color:#2563EB;">
+            {{ item.badge }}
+          </span>
+        </a>
+      </ng-container>
+
+      <!-- Admin section -->
+      <ng-container *ngIf="hasAdminItems()">
+        <div class="pt-3 pb-1">
+          <div class="h-px mx-2 mb-3" style="background: var(--color-candy-border);"></div>
+          <p class="text-[10px] font-medium uppercase tracking-widest px-2 pb-1"
+            style="color: var(--color-candy-muted);">Administración</p>
+        </div>
+
+        <ng-container *ngFor="let item of adminItems">
+          <a
+            *ngIf="canSee(item)"
+            [routerLink]="item.route"
+            routerLinkActive="sb-active"
+            (click)="closeMobile()"
+            class="sb-item flex items-center gap-2.5 px-2.5 py-[7px] rounded-[8px] text-[12.5px] border-l-2 border-l-transparent transition-all duration-100 cursor-pointer no-underline"
+            style="color: var(--color-candy-muted);"
+          >
+            <ng-container [ngSwitch]="item.route">
+              <svg *ngSwitchCase="'/reportes'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>
+              </svg>
+              <svg *ngSwitchCase="'/usuarios'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3a3 3 0 1 0 0 6a3 3 0 0 0 0 -6"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/>
+              </svg>
+              <svg *ngSwitchCase="'/auditoria'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"/><path d="M9 12h6"/><path d="M9 16h6"/>
+              </svg>
+            </ng-container>
+            {{ item.label }}
+          </a>
+        </ng-container>
+      </ng-container>
+
+    </nav>
+
+    <!-- Logout -->
+    <button
+      (click)="onLogout()"
+      class="flex items-center gap-2.5 px-4 py-3 w-full text-left shrink-0 transition-colors"
+      style="border-top: 1px solid var(--color-candy-border); color: var(--color-candy-muted); background: transparent;"
+      onmouseenter="this.style.color='#EF4444'"
+      onmouseleave="this.style.color='var(--color-candy-muted)'"
+    >
+      <svg class="w-[15px] h-[15px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/><path d="M9 12h12l-3 -3"/><path d="M18 15l3 -3"/>
+      </svg>
+      <span class="text-[12px]">Cerrar sesión</span>
+    </button>
+
+  </aside>
+
+  <!-- ════════════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ════════════════════════════════════════ -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+
+    <!-- TOPBAR -->
+    <header
+      class="flex items-center gap-3 h-[56px] px-4 shrink-0"
+      style="background-color: var(--color-candy-surface); border-bottom: 1px solid var(--color-candy-border);"
+    >
+
+      <!-- Burger mobile -->
+      <button
+        (click)="toggleMobile()"
+        class="lg:hidden p-1.5 rounded-[7px] transition-colors"
+        style="color: var(--color-candy-muted);"
+        aria-label="Abrir menú"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" viewBox="0 0 24 24">
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+
+      <!-- Título + subtítulo -->
+      <div class="flex-1 min-w-0">
+        <h1 class="text-[14px] font-semibold leading-tight" style="color: var(--color-candy-text);">{{ pageTitle }}</h1>
+        <p *ngIf="pageSub" class="text-[11px] leading-tight" style="color: var(--color-candy-muted);">{{ pageSub }}</p>
+      </div>
+
+      <!-- Búsqueda -->
+      <div
+        class="hidden sm:flex items-center gap-2 h-[34px] px-3 rounded-[8px]"
+        style="border: 1px solid var(--color-candy-border); background-color: var(--color-candy-bg);"
+      >
+        <svg class="w-[14px] h-[14px] shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" style="color: var(--color-candy-muted);">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="search"
+          placeholder="Buscar..."
+          class="w-[140px] border-none outline-none bg-transparent text-[12px]"
+          style="color: var(--color-candy-text);"
+        />
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex items-center gap-1.5">
+
+        <!-- Toggle dark mode -->
+        <button
+          (click)="toggleDark()"
+          class="w-[34px] h-[34px] rounded-[8px] flex items-center justify-center transition-all"
+          style="color: var(--color-candy-muted);"
+          onmouseenter="this.style.background='rgba(15,23,42,0.06)'"
+          onmouseleave="this.style.background='transparent'"
+          [attr.aria-label]="darkMode ? 'Tema claro' : 'Tema oscuro'"
+        >
+          <svg *ngIf="darkMode" class="w-[17px] h-[17px]" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-5.657 -2.343l.707 .707m12.728 -12.728l.707 .707m-13.435 0l-.707 .707m13.435 12.021l-.707 .707"/>
+          </svg>
+          <svg *ngIf="!darkMode" class="w-[17px] h-[17px]" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/>
+          </svg>
+        </button>
+
+        <!-- Notificaciones -->
+        <button
+          class="relative w-[34px] h-[34px] rounded-[8px] flex items-center justify-center transition-all"
+          style="color: var(--color-candy-muted);"
+          onmouseenter="this.style.background='rgba(15,23,42,0.06)'"
+          onmouseleave="this.style.background='transparent'"
+          aria-label="Notificaciones"
+        >
+          <svg class="w-[17px] h-[17px]" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/>
+          </svg>
+          <span class="absolute top-[7px] right-[7px] w-[6px] h-[6px] rounded-full border-2"
+            style="background:#E11D48; border-color: var(--color-candy-surface);"></span>
+        </button>
+
+        <!-- Avatar + menú -->
+        <div class="relative" data-profile>
+          <button
+            (click)="toggleProfile()"
+            class="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-[8px] transition-all"
+            onmouseenter="this.style.background='rgba(15,23,42,0.06)'"
+            onmouseleave="this.style.background='transparent'"
+          >
+            <div class="w-[30px] h-[30px] rounded-full shrink-0 flex items-center justify-center text-[11px] font-semibold text-white"
+              style="background: linear-gradient(135deg,#60A5FA,#2563EB);">
+              {{ initials }}
+            </div>
+            <div class="hidden sm:block text-left leading-tight">
+              <p class="text-[12px] font-medium" style="color: var(--color-candy-text);">{{ nombreCorto }}</p>
+              <p class="text-[10px]" style="color: var(--color-candy-muted);">{{ rolActual }}</p>
+            </div>
+            <svg class="w-[13px] h-[13px] shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" style="color: var(--color-candy-muted);">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+
+          <!-- Dropdown perfil -->
+          <div
+            *ngIf="profileOpen"
+            class="absolute right-0 top-full mt-1.5 w-52 z-50 rounded-[12px] overflow-hidden"
+            style="
+              background-color: var(--color-candy-surface);
+              border: 1px solid var(--color-candy-border);
+              box-shadow: 0 8px 40px rgba(15,23,42,0.12);
+            "
+          >
+            <!-- Info usuario -->
+            <div class="px-4 py-3" style="border-bottom: 1px solid var(--color-candy-border);">
+              <p class="text-[13px] font-semibold truncate" style="color: var(--color-candy-text);">
+                {{ usuarioActual?.nombres }} {{ usuarioActual?.apellido_paterno }}
+              </p>
+              <p class="text-[11px] mt-0.5" style="color: var(--color-candy-muted);">
+                {{ usuarioActual?.email }}
+              </p>
+              <span class="inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                style="background:rgba(37,99,235,0.10);color:#2563EB;">
+                {{ rolActual }}
+              </span>
+            </div>
+
+            <!-- Links -->
+            <div class="py-1">
+              <a routerLink="/perfil" (click)="profileOpen=false"
+                class="flex items-center gap-2.5 px-4 py-2 text-[12px] transition-colors cursor-pointer"
+                style="color: var(--color-candy-text); text-decoration:none;"
+                onmouseenter="this.style.background='rgba(15,23,42,0.04)'"
+                onmouseleave="this.style.background='transparent'"
+              >
+                <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" viewBox="0 0 24 24">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.832 2.849"/>
+                </svg>
+                Mi perfil
+              </a>
+              <a routerLink="/cambiar-contrasena" (click)="profileOpen=false"
+                class="flex items-center gap-2.5 px-4 py-2 text-[12px] transition-colors cursor-pointer"
+                style="color: var(--color-candy-text); text-decoration:none;"
+                onmouseenter="this.style.background='rgba(15,23,42,0.04)'"
+                onmouseleave="this.style.background='transparent'"
+              >
+                <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" viewBox="0 0 24 24">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/>
+                </svg>
+                Cambiar contraseña
+              </a>
+            </div>
+
+            <!-- Logout -->
+            <div style="border-top: 1px solid var(--color-candy-border);">
+              <button
+                (click)="onLogout()"
+                class="flex items-center gap-2.5 px-4 py-2.5 w-full text-[12px] transition-colors"
+                style="color:#EF4444; background:transparent;"
+                onmouseenter="this.style.background='rgba(239,68,68,0.06)'"
+                onmouseleave="this.style.background='transparent'"
+              >
+                <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" viewBox="0 0 24 24">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/><path d="M9 12h12l-3 -3"/><path d="M18 15l3 -3"/>
+                </svg>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ROUTER OUTLET -->
+    <main class="flex-1 overflow-y-auto p-5" style="background-color: var(--color-candy-bg);">
+      <router-outlet />
+    </main>
+
+  </div>
+</div>

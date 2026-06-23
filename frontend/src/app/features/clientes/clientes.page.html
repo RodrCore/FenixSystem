@@ -1,0 +1,245 @@
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card" style="border-left-color:#2563EB">
+      <div class="stat-val">{{ stats.total | number }}</div>
+      <div class="stat-lbl">Total clientes</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#059669">
+      <div class="stat-val">{{ stats.activos | number }}</div>
+      <div class="stat-lbl">Activos</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#94A3B8">
+      <div class="stat-val">{{ stats.inactivos | number }}</div>
+      <div class="stat-lbl">Inactivos</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#D97706">
+      <div class="stat-val">{{ stats.con_deuda | number }}</div>
+      <div class="stat-lbl">Con deuda</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#E11D48">
+      <div class="stat-val">Bs {{ stats.deuda_total | number:'1.2-2' }}</div>
+      <div class="stat-lbl">Deuda total</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" [formGroup]="filterForm">
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input formControlName="buscar"
+        placeholder="Buscar por nombre, NIT, teléfono..."
+        class="search-input" />
+    </div>
+
+    <select formControlName="estado" class="filter-sel" (change)="onFilterChange()">
+      <option *ngFor="let e of estadosDisponibles" [value]="e.v">{{ e.n }}</option>
+    </select>
+
+    <select formControlName="tipo_cliente" class="filter-sel" (change)="onFilterChange()">
+      <option *ngFor="let t of tiposCliente" [value]="t.v">{{ t.n }}</option>
+    </select>
+
+    <label class="check-filter">
+      <input type="checkbox" formControlName="con_deuda" (change)="onFilterChange()" />
+      Con deuda
+    </label>
+
+    <button class="btn btn-ghost" *ngIf="hayFiltrosActivos" (click)="limpiarFiltros()">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+      Limpiar
+    </button>
+
+    <div class="spacer"></div>
+
+    <button class="btn btn-primary" (click)="abrirNuevoCliente()">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Nuevo cliente
+    </button>
+  </div>
+
+  <!-- TABLA -->
+  <div class="table-card">
+    <div *ngIf="loading" class="loading-bar"></div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Contacto</th>
+            <th>Ubicación</th>
+            <th>Tipo</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of clientes" (click)="verDetalle(c)" class="row-clickable">
+            <td>
+              <div class="cell-cliente">
+                <div class="avatar" [style.background]="estadoColor(c.estado ?? 'Activo')">
+                  {{ iniciales(c) }}
+                </div>
+                <div>
+                  <div class="cl-name">{{ c.razon_social }}</div>
+                  <div class="cl-meta" *ngIf="c.nombre_comercial">
+                    {{ c.nombre_comercial }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div class="cell-contacto">
+                <div *ngIf="c.contacto_telefono">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" viewBox="0 0 24 24" width="12" height="12">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  {{ c.contacto_telefono }}
+                </div>
+                <div *ngIf="c.contacto_email" class="muted">
+                  {{ c.contacto_email }}
+                </div>
+              </div>
+            </td>
+
+            <td class="td-muted">
+              {{ direccionResumen(c) }}
+            </td>
+
+            <td>
+              <span class="tipo-badge" *ngIf="c.tipo_cliente">
+                {{ c.tipo_cliente }}
+              </span>
+              <span class="muted" *ngIf="!c.tipo_cliente">—</span>
+            </td>
+
+            <td class="td-saldo">
+              <span [class.con-deuda]="(c.saldo_pendiente ?? 0) > 0">
+                Bs {{ c.saldo_pendiente ?? 0 | number:'1.2-2' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge"
+                [style.color]="estadoColor(c.estado ?? 'Activo')"
+                [style.background]="estadoColor(c.estado ?? 'Activo') + '18'"
+                [style.border-color]="estadoColor(c.estado ?? 'Activo') + '40'">
+                {{ c.estado }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-btns">
+                <button class="act-btn" title="Ver detalle"
+                  (click)="verDetalle(c); $event.stopPropagation()">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.75"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    viewBox="0 0 24 24" width="15" height="15">
+                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/>
+                    <path d="M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="!loading && clientes.length === 0">
+            <td colspan="7" class="empty-row">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5"
+                viewBox="0 0 24 24" width="32" height="32"
+                style="color:var(--color-candy-muted);margin-bottom:8px">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <p *ngIf="hayFiltrosActivos">No se encontraron clientes con esos filtros</p>
+              <p *ngIf="!hayFiltrosActivos">Aún no hay clientes registrados</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" *ngIf="total > 0">
+      <span class="pag-info">
+        Mostrando {{ desde }}–{{ hasta }} de {{ total | number }} clientes
+      </span>
+      <div class="pag-nums">
+        <button class="pag-btn pag-arrow" (click)="goPage(page - 1)"
+          [disabled]="page === 1" aria-label="Anterior">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+        <ng-container *ngFor="let n of pageNumbers">
+          <span *ngIf="n === -1" class="pag-ellipsis">…</span>
+          <button *ngIf="n !== -1" class="pag-btn"
+            [class.pag-active]="n === page" (click)="goPage(n)">
+            {{ n }}
+          </button>
+        </ng-container>
+        <button class="pag-btn pag-arrow" (click)="goPage(page + 1)"
+          [disabled]="page === pages" aria-label="Siguiente">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     DRAWER DE DETALLE
+═══════════════════════════════════════════════ -->
+<app-cliente-detail
+  [clienteId]="clienteDetalleId"
+  [open]="detalleAbierto"
+  (closed)="cerrarDetalle()"
+  (editRequest)="abrirEditor($event)"
+  (deleteRequest)="pedirEliminarCliente($event)"
+/>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL DE CREAR/EDITAR
+═══════════════════════════════════════════════ -->
+<app-cliente-form
+  *ngIf="mostrarModalNuevo"
+  [cliente]="clienteEditando"
+  (saved)="onClienteGuardado($event)"
+  (cancelled)="onEditCancelled()"
+/>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL DE CONFIRMACIÓN
+═══════════════════════════════════════════════ -->
+<app-confirm-action
+  *ngIf="confirmConfig.open"
+  [title]="confirmConfig.title"
+  [message]="confirmConfig.message"
+  [itemName]="confirmConfig.itemName"
+  [confirmLabel]="confirmConfig.confirmLabel"
+  [type]="confirmConfig.type"
+  [askMotivo]="confirmConfig.askMotivo"
+  [requireMotivo]="confirmConfig.requireMotivo"
+  [motivoPlaceholder]="confirmConfig.motivoPlaceholder"
+  [loading]="confirmConfig.loading"
+  (confirmed)="onConfirmConfirmed($event)"
+  (cancelled)="onConfirmCancelled()"
+/>

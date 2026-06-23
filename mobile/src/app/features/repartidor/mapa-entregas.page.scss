@@ -1,0 +1,41 @@
+.btn-centrar-en-mi {
+  position: absolute;
+  bottom: calc(80px + env(safe-area-inset-bottom));  /* ✅ aún más arriba */
+  right: 16px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 99;
+}
+
+// ✅ Controles de zoom de Leaflet — separarlos del borde con safe area
+::ng-deep .leaflet-control-zoom {
+  margin-bottom: calc(160px + env(safe-area-inset-bottom)) !important;
+  margin-right: 16px !important;
+}
+
+// Si los quieres mantener arriba, usar este otro selector:
+::ng-deep .leaflet-top.leaflet-right {
+  top: calc(
+    56px + env(safe-area-inset-top)
+  ) !important; // 56 = altura del navbar
+}
+
+// El mapa debe ocupar todo el espacio disponible
+.mapa-fullscreen-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}

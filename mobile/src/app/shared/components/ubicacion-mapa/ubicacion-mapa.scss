@@ -1,0 +1,156 @@
+.mapa-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+}
+
+/* Header */
+.mapa-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border-bottom: 0.5px solid #e2e8f0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.mapa-back {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  border: 0.5px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #0f172a;
+}
+.mapa-title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.mapa-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+  display: block;
+}
+.mapa-sub {
+  font-size: 11px;
+  color: #64748b;
+  display: block;
+  margin-top: 1px;
+}
+.mapa-gps-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  border: 0.5px solid rgba(225, 29, 72, 0.25);
+  background: rgba(225, 29, 72, 0.08);
+  color: #e11d48;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Mapa */
+.mapa-container {
+  flex: 1;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Crosshair fijo en el centro */
+.mapa-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+  /* Ajustar por el header (~60px) y footer (~80px) */
+  margin-top: calc(-70px / 2 + 30px);
+}
+.ch-ring {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2.5px solid #e11d48;
+  background: rgba(225, 29, 72, 0.12);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ch-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e11d48;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Coordenadas */
+.mapa-coords {
+  position: absolute;
+  bottom: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.8);
+  color: white;
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  z-index: 10;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(4px);
+}
+
+/* Footer */
+.mapa-footer {
+  padding: 12px 16px;
+  background: #ffffff;
+  border-top: 0.5px solid #e2e8f0;
+  z-index: 10;
+  flex-shrink: 0;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+.mapa-confirmar {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: #e11d48;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.mapa-confirmar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Ocultar controles de Leaflet que no necesitamos */
+:host ::ng-deep .leaflet-control-zoom {
+  display: none;
+}

@@ -1,0 +1,333 @@
+<div class="p-0">
+  <!-- ══ HEADER ══ -->
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <p class="text-[11px]" style="color: var(--color-candy-muted)">
+        Última actualización: {{ today | date: 'd MMM yyyy, HH:mm' }}
+      </p>
+    </div>
+    <button class="refresh-btn" (click)="cargar()" [disabled]="loading" title="Refrescar">
+      <svg [class.spinning]="loading" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+        <path d="M16 16h5v5"/>
+      </svg>
+      Refrescar
+    </button>
+  </div>
+
+  <!-- ══ LOADING ══ -->
+  <div *ngIf="loading && !data" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div *ngFor="let i of [1,2,3,4]" class="skeleton-card"></div>
+  </div>
+
+  <ng-container *ngIf="data">
+
+    <!-- ══ CARDS DE KPIS ══ -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+
+      <!-- Ventas del día -->
+      <div class="kpi-card" style="border-left: 3px solid #2563eb;">
+        <div class="kpi-header">
+          <span class="kpi-label">Ventas del día</span>
+          <svg class="kpi-icon" style="color: #2563eb;"
+            fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M16.7 8a3 3 0 0 0 -2.7 -2h-4a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-4a3 3 0 0 1 -2.7 -2"/>
+            <path d="M12 6v2m0 8v2" />
+          </svg>
+        </div>
+        <div class="kpi-value">Bs {{ fmtBs(data.kpis.ventas_hoy.valor) }}</div>
+        <div class="kpi-sub">Total facturado hoy</div>
+        <span class="kpi-trend"
+          [class.up]="data.kpis.ventas_hoy.variacion >= 0"
+          [class.down]="data.kpis.ventas_hoy.variacion < 0">
+          <svg *ngIf="data.kpis.ventas_hoy.variacion >= 0" class="w-3 h-3"
+            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 17l6-6 4 4 8-8" />
+          </svg>
+          <svg *ngIf="data.kpis.ventas_hoy.variacion < 0" class="w-3 h-3"
+            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 7l6 6 4-4 8 8" />
+          </svg>
+          {{ data.kpis.ventas_hoy.variacion >= 0 ? '+' : '' }}{{ data.kpis.ventas_hoy.variacion }}% vs ayer
+        </span>
+      </div>
+
+      <!-- Pedidos activos -->
+      <div class="kpi-card" style="border-left: 3px solid #10b981;">
+        <div class="kpi-header">
+          <span class="kpi-label">Pedidos activos</span>
+          <svg class="kpi-icon" style="color: #10b981;"
+            fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+            <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+            <path d="M1 3h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2 -1.61l1.6 -8.39h-19.32" />
+          </svg>
+        </div>
+        <div class="kpi-value">{{ data.kpis.pedidos_activos.valor | number }}</div>
+        <div class="kpi-sub">En proceso ahora</div>
+        <span class="kpi-trend"
+          [class.up]="data.kpis.pedidos_activos.diferencia >= 0"
+          [class.down]="data.kpis.pedidos_activos.diferencia < 0">
+          <svg *ngIf="data.kpis.pedidos_activos.diferencia >= 0" class="w-3 h-3"
+            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 17l6-6 4 4 8-8" />
+          </svg>
+          <svg *ngIf="data.kpis.pedidos_activos.diferencia < 0" class="w-3 h-3"
+            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 7l6 6 4-4 8 8" />
+          </svg>
+          {{ data.kpis.pedidos_activos.diferencia >= 0 ? '+' : '' }}{{ data.kpis.pedidos_activos.diferencia }} vs ayer
+        </span>
+      </div>
+
+      <!-- Tiempo promedio -->
+      <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
+        <div class="kpi-header">
+          <span class="kpi-label">Tiempo de entrega</span>
+          <svg class="kpi-icon" style="color: #f59e0b;"
+            fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+            <path d="M12 7v5l3 3" />
+          </svg>
+        </div>
+        <div class="kpi-value">{{ fmtHoras(data.kpis.tiempo_entrega.horas) }}</div>
+        <div class="kpi-sub">Promedio por pedido</div>
+        <span class="kpi-trend"
+          [class.up]="data.kpis.tiempo_entrega.variacion_min >= 0"
+          [class.down]="data.kpis.tiempo_entrega.variacion_min < 0">
+          <ng-container *ngIf="data.kpis.tiempo_entrega.horas === 0; else conTiempo">
+            Sin entregas
+          </ng-container>
+          <ng-template #conTiempo>
+            <svg *ngIf="data.kpis.tiempo_entrega.variacion_min >= 0" class="w-3 h-3"
+              fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M3 17l6-6 4 4 8-8" />
+            </svg>
+            <svg *ngIf="data.kpis.tiempo_entrega.variacion_min < 0" class="w-3 h-3"
+              fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M3 7l6 6 4-4 8 8" />
+            </svg>
+            {{ data.kpis.tiempo_entrega.variacion_min >= 0 ? '-' : '+' }}{{ data.kpis.tiempo_entrega.variacion_min | number }}m
+            {{ data.kpis.tiempo_entrega.variacion_min >= 0 ? 'más rápido' : 'más lento' }}
+          </ng-template>
+        </span>
+      </div>
+
+      <!-- Tasa de entrega -->
+      <div class="kpi-card" style="border-left: 3px solid #ef4444;">
+        <div class="kpi-header">
+          <span class="kpi-label">Tasa de entrega</span>
+          <svg class="kpi-icon" style="color: #ef4444;"
+            fill="none" stroke="currentColor" stroke-width="1.75"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+            <path d="M3.6 9h16.8" />
+            <path d="M3.6 15h16.8" />
+          </svg>
+        </div>
+        <div class="kpi-value">{{ data.kpis.tasa_entrega.valor }}%</div>
+        <div class="kpi-sub">
+          {{ data.kpis.tasa_entrega.entregados }} de {{ data.kpis.tasa_entrega.total_pedidos }} · Meta: {{ data.kpis.tasa_entrega.meta }}%
+        </div>
+        <span class="kpi-trend"
+          [class.up]="data.kpis.tasa_entrega.diferencia >= 0"
+          [class.down]="data.kpis.tasa_entrega.diferencia < 0">
+          <svg *ngIf="data.kpis.tasa_entrega.diferencia >= 0" class="w-3 h-3"
+            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 17l6-6 4 4 8-8" />
+          </svg>
+          <svg *ngIf="data.kpis.tasa_entrega.diferencia < 0" class="w-3 h-3"
+            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 7l6 6 4-4 8 8" />
+          </svg>
+          {{ data.kpis.tasa_entrega.diferencia >= 0 ? '+' : '' }}{{ data.kpis.tasa_entrega.diferencia }}% vs meta
+        </span>
+      </div>
+    </div>
+
+    <!-- ══ ALERTAS (solo si hay) ══ -->
+    <div *ngIf="data.alertas.lotes_por_vencer.length > 0 || data.alertas.productos_sin_stock > 0"
+      class="alerts-row mb-4">
+
+      <div *ngIf="data.alertas.lotes_por_vencer.length > 0" class="alert-card warning">
+        <div class="alert-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="alert-content">
+          <div class="alert-title">{{ data.alertas.lotes_por_vencer.length }} lote(s) vencen pronto</div>
+          <div class="alert-sub">
+            <ng-container *ngFor="let l of data.alertas.lotes_por_vencer.slice(0, 2); let last = last">
+              {{ l.producto }} ({{ l.dias_restantes }}d){{ !last ? ', ' : '' }}
+            </ng-container>
+            <span *ngIf="data.alertas.lotes_por_vencer.length > 2">
+              y {{ data.alertas.lotes_por_vencer.length - 2 }} más
+            </span>
+          </div>
+        </div>
+        <a routerLink="/reportes-admin" class="alert-action">Ver →</a>
+      </div>
+
+      <div *ngIf="data.alertas.productos_sin_stock > 0" class="alert-card danger">
+        <div class="alert-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="18" height="18">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="alert-content">
+          <div class="alert-title">{{ data.alertas.productos_sin_stock }} producto(s) sin stock</div>
+          <div class="alert-sub">Revisa el inventario para reabastecer</div>
+        </div>
+        <a routerLink="/productos" class="alert-action">Ver →</a>
+      </div>
+    </div>
+
+    <!-- ══ GRÁFICO + TOP PRODUCTOS ══ -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+
+      <!-- Gráfico ventas 7 días -->
+      <div class="chart-card lg:col-span-2">
+        <div class="card-header">
+          <span class="card-title">Ventas últimos 7 días</span>
+          <span class="card-sub">Pedidos entregados</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas #chartVentas></canvas>
+        </div>
+      </div>
+
+      <!-- Top productos hoy -->
+      <div class="chart-card">
+        <div class="card-header">
+          <span class="card-title">Top productos hoy</span>
+          <span class="card-sub">Por monto vendido</span>
+        </div>
+        <div class="top-products">
+          <div *ngFor="let p of data.top_productos_hoy; let i = index" class="top-product">
+            <div class="tp-rank" [class.rank-1]="i===0" [class.rank-2]="i===1" [class.rank-3]="i===2">
+              {{ i + 1 }}
+            </div>
+            <div class="tp-info">
+              <div class="tp-name">{{ p.nombre }}</div>
+              <div class="tp-code">{{ p.codigo }}</div>
+            </div>
+            <div class="tp-value">Bs {{ fmtBs(p.total) }}</div>
+          </div>
+          <div *ngIf="data.top_productos_hoy.length === 0" class="empty-small">
+            Sin ventas hoy
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MAPA + ÚLTIMOS PEDIDOS ══ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+      <!-- MINI MAPA: solo SUPER_ADMIN / ADMIN -->
+      <div *ngIf="esAdmin$ | async" class="rounded-xl p-4"
+        style="background: var(--color-candy-surface); border: 0.5px solid var(--color-candy-border)">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[12px] font-medium" style="color: var(--color-candy-text)">
+                Rutas activas
+              </span>
+              <span style="
+                display: inline-flex; align-items: center; gap: 4px;
+                font-size: 10px; color: #059669; font-weight: 500;
+                padding: 1px 7px; border-radius: 999px;
+                background: rgba(5, 150, 105, 0.10);">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: #059669;"></span>
+                En vivo
+              </span>
+            </div>
+            <p class="text-[10px] mt-0.5" style="color: var(--color-candy-muted)">
+              <span *ngIf="data.repartidores.activos > 0">
+                {{ data.repartidores.activos }} de {{ data.repartidores.total }} repartidores en ruta
+              </span>
+              <span *ngIf="data.repartidores.activos === 0">
+                Potosí, Bolivia
+              </span>
+            </p>
+          </div>
+        </div>
+        <app-mini-map />
+      </div>
+
+      <!-- ÚLTIMOS PEDIDOS -->
+      <div class="rounded-xl p-4"
+        style="background: var(--color-candy-surface); border: 0.5px solid var(--color-candy-border)">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[12px] font-medium" style="color: var(--color-candy-text)">
+            Últimos pedidos
+          </span>
+          <a routerLink="/pedidos" class="text-[11px] cursor-pointer"
+            style="color: #2563eb; text-decoration: none">Ver todos →</a>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px">
+          <thead>
+            <tr>
+              <th class="th-pedidos">Cliente</th>
+              <th class="th-pedidos">Monto</th>
+              <th class="th-pedidos">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of data.ultimos_pedidos">
+              <td class="td-pedido">
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <div style="width: 26px; height: 26px; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 10px; font-weight: 500; color: white; flex-shrink: 0;"
+                    [style.background]="colorAvatar(p.cliente_id || 0)">
+                    {{ iniciales(p.cliente_nombre) }}
+                  </div>
+                  <div>
+                    <div style="font-size: 12px; font-weight: 500; color: var(--color-candy-text)">
+                      {{ p.cliente_nombre }}
+                    </div>
+                    <div style="font-size: 10px; color: var(--color-candy-muted)">
+                      {{ p.numero }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="td-pedido" style="font-weight: 500; color: var(--color-candy-text)">
+                Bs {{ fmtBs(p.monto) }}
+              </td>
+              <td class="td-pedido">
+                <span style="display: inline-flex; align-items: center; gap: 3px;
+                  padding: 2px 8px; border-radius: 999px;
+                  font-size: 10px; font-weight: 500;"
+                  [style.background]="estadoConfig(p.estado).bg"
+                  [style.color]="estadoConfig(p.estado).color">
+                  <span style="width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0"
+                    [style.background]="estadoConfig(p.estado).dot"></span>
+                  {{ estadoConfig(p.estado).label }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="data.ultimos_pedidos.length === 0">
+              <td colspan="3" class="empty-row">No hay pedidos recientes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

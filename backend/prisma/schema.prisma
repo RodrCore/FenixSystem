@@ -1,0 +1,711 @@
+// =============================================
+// FENIXBD - Schema de Prisma
+// Generado para PostgreSQL con PostGIS
+// =============================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Ejemplo: postgresql://rodrcore:tu_password@localhost:5432/FenixBd?schema=public
+}
+
+// =============================================
+// EXTENSIONES DE POSTGRESQL
+// =============================================
+
+// Nota: Las extensiones se crean manualmente o con migraciones personalizadas
+// CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+// CREATE EXTENSION IF NOT EXISTS "postgis";
+// CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+// =============================================
+// ENUMS
+// =============================================
+
+enum EstadoPedido {
+  Borrador
+  Confirmado
+  Preparando
+  Listo_Carga
+  En_Ruta
+  Entregado_Parcial
+  Entregado_Total
+  Cancelado
+  Devuelto
+}
+
+enum MetodoPago {
+  Efectivo
+  Transferencia
+  Cuenta_Corriente
+  Tarjeta
+}
+
+enum EstadoPago {
+  Pendiente
+  Parcial
+  Pagado
+  Reembolsado
+}
+
+enum TipoMovimiento {
+  entrada_inicial
+  venta
+  devolucion
+  merma_vencimiento
+  merma_robo
+  ajuste_inventario
+}
+
+enum EstadoLote {
+  Disponible
+  Agotado
+  Vencido
+  Cuarentena
+  Mermado
+}
+
+enum EstadoCliente {
+  Activo
+  Inactivo
+  Moroso
+  Prospecto
+}
+
+enum EstadoLineaPedido {
+  Pendiente
+  Preparada
+  Entregada
+  Devuelta
+  Cancelada
+}
+
+enum TipoCierre {
+  Cierre_Turno
+  Cierre_Diario
+  Cierre_Mensual
+}
+
+// =============================================
+// MODELOS PRINCIPALES
+// =============================================
+
+model Role {
+  id               Int       @id @default(autoincrement())
+  nombre           String    @unique @db.VarChar(50)
+  descripcion      String?   @db.Text
+  permisos         Json      @default("{}")
+  nivel_jerarquico Int       @default(0)
+  activo           Boolean   @default(true)
+  created_at       DateTime  @default(now()) @db.Timestamptz()
+  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamptz()
+  
+  usuarios         Usuario[]
+}
+
+model Usuario {
+  id                    Int        @id @default(autoincrement())
+  rol_id                Int
+  nombres               String     @db.VarChar(100)
+  apellido_paterno      String     @db.VarChar(50)
+  apellido_materno      String?    @db.VarChar(50)
+  email                 String     @unique @db.VarChar(100)
+  password_hash         String     @db.VarChar(255)
+  telefono              String?    @db.VarChar(20)
+  avatar_url            String?    @db.Text
+  fecha_contratacion    DateTime?  @db.Date
+  numero_empleado       String?    @unique @db.VarChar(20)
+  salario_base          Decimal?   @db.Decimal(10, 2)
+  comision_porcentaje   Decimal?   @default(0) @db.Decimal(5, 2)
+  estado                Boolean    @default(true)
+  ultimo_acceso         DateTime?  @db.Timestamptz()
+  refresh_token         String?    @db.Text
+  reset_token           String?    @db.VarChar(255)
+  reset_token_expira    DateTime?  @db.Timestamptz()
+  created_at            DateTime   @default(now()) @db.Timestamptz()
+  updated_at            DateTime   @default(now()) @updatedAt @db.Timestamptz()
+  ci                          String?    @unique @db.VarChar(20)
+  ultima_ip                   String?    @db.VarChar(45)
+  intentos_fallidos_login     Int        @default(0)
+  bloqueado_hasta             DateTime?  @db.Timestamptz()
+  password_temporal           Boolean    @default(false)
+  requiere_cambio_password    Boolean    @default(false)
+  deleted_at                  DateTime?  @db.Timestamptz()
+  deleted_by                  Int?
+  motivo_eliminacion          String?    @db.Text
+
+  // Relaciones (las que ya tienes)
+  rol                           Role                   @relation(fields: [rol_id], references: [id])
+  pedidos_como_preventista      Pedido[]               @relation("Preventista")
+  pedidos_como_repartidor       Pedido[]               @relation("Repartidor")
+  pedidos_creados               Pedido[]               @relation("Creador")
+  clientes_asignados            Cliente[]              @relation("PreventistaAsignado")
+  rutas_asignadas               Ruta[]                 @relation("RepartidorRuta")
+  movimientos_inventario        MovimientoInventario[]
+  cortes_caja                   CorteCaja[]
+  metas                         MetaComercial[]
+  auditoria                     AuditoriaLog[]
+  pedidos_eliminados            Pedido[]   @relation("Eliminador")
+  clientes_eliminados           Cliente[]        @relation("ClienteEliminador")
+  eliminador                    Usuario?   @relation("UsuarioEliminador", fields: [deleted_by], references: [id])
+  usuarios_eliminados           Usuario[]  @relation("UsuarioEliminador")
+  reabastecimientos_solicitados  OrdenReabastecimiento[] @relation("SolicitanteReabastecimiento")
+  reabastecimientos_recibidos    OrdenReabastecimiento[] @relation("ReceptorReabastecimiento")
+  reabastecimientos_eliminados   OrdenReabastecimiento[] @relation("EliminadorReabastecimiento")
+  proveedores_eliminados  Proveedor[]  @relation("ProveedorEliminador")
+
+  @@map("usuarios")
+}
+
+model Categoria {
+  id                   Int         @id @default(autoincrement())
+  nombre               String      @unique @db.VarChar(100)
+  descripcion          String?     @db.Text
+  categoria_padre_id   Int?
+  imagen_url           String?     @db.Text
+  orden_visualizacion  Int         @default(0)
+  activo               Boolean     @default(true)
+  created_at           DateTime    @default(now()) @db.Timestamptz()
+  
+  // Auto-relación para subcategorías
+  categoria_padre      Categoria?  @relation("CategoriaPadre", fields: [categoria_padre_id], references: [id])
+  subcategorias        Categoria[] @relation("CategoriaPadre")
+  productos            Producto[]
+  
+  @@map("categorias")
+}
+
+model Producto {
+  id                            Int                         @id @default(autoincrement())
+  codigo_barras_unidad_base     String?                     @unique @db.VarChar(50)
+  codigo_interno                String?                     @unique @db.VarChar(50)
+  nombre                        String                      @db.VarChar(200)
+  descripcion_corta             String?                     @db.VarChar(255)
+  descripcion_larga             String?                     @db.Text
+  categoria_id                  Int?
+  marca                         String?                     @db.VarChar(100)
+  unidad_medida_base            String                      @default("UNIDAD") @db.VarChar(20)
+  peso_gramos                   Decimal?                    @db.Decimal(10, 2)
+  volumen_mililitros            Decimal?                    @db.Decimal(10, 2)
+  precio_compra_promedio        Decimal?                    @db.Decimal(10, 2)
+  margen_ganancia_porcentaje    Decimal?                    @db.Decimal(5, 2)
+  iva_porcentaje                Decimal?                    @default(16.00) @db.Decimal(5, 2)
+  ieps_porcentaje               Decimal?                    @default(0) @db.Decimal(5, 2)
+  stock_minimo                  Int                         @default(10)
+  stock_maximo                  Int                         @default(1000)
+  dias_para_alerta_vencimiento  Int                         @default(14)
+  imagen_url                    String?                     @db.Text
+  activo                        Boolean                     @default(true)
+  created_at                    DateTime                    @default(now()) @db.Timestamptz()
+  updated_at                    DateTime                    @default(now()) @updatedAt @db.Timestamptz()
+  
+  // Relaciones
+  categoria                     Categoria?                  @relation(fields: [categoria_id], references: [id])
+  presentaciones                ProductoPresentacion[]
+  lotes                         Lote[]
+  detalle_pedidos               DetallePedido[]
+  promociones_condicion         Promocion[]                 @relation("ProductoCondicion")
+  promociones_beneficio         Promocion[]                 @relation("ProductoBeneficio")
+  
+  @@map("productos")
+  @@index([nombre])                          // búsqueda por nombre
+  @@index([categoria_id])                    // filtro por categoría
+  @@index([activo])                          // filtro activo/inactivo
+  @@index([marca])                           // filtro por marca
+  @@index([activo, categoria_id])            // filtro combinado frecuente
+  @@index([nombre, activo])                  // búsqueda + estado
+}
+
+model Presentacion {
+  id                       Int                      @id @default(autoincrement())
+  nombre                   String                   @unique @db.VarChar(50)
+  siglas                   String?                  @unique @db.VarChar(10)
+  descripcion              String?                  @db.VarChar(100)
+  es_presentacion_venta    Boolean                  @default(true)
+  created_at               DateTime                 @default(now()) @db.Timestamptz()
+  
+  // Relaciones - AGREGAR ESTAS LÍNEAS
+  productos                ProductoPresentacion[]
+  lotes                    Lote[]
+  detalle_pedidos          DetallePedido[]
+  promociones_condicion    Promocion[]              @relation("PresentacionCondicion")  // ← AGREGAR
+  promociones_beneficio    Promocion[]              @relation("PresentacionBeneficio")  // ← AGREGAR
+  
+  @@map("presentaciones")
+}
+
+model ProductoPresentacion {
+  id                          Int       @id @default(autoincrement())
+  producto_id                 Int
+  presentacion_id             Int
+  unidades_equivalentes       Decimal   @db.Decimal(10, 2)
+  precio_venta                Decimal   @db.Decimal(10, 2)
+  precio_mayoreo              Decimal?  @db.Decimal(10, 2)
+  cantidad_minima_mayoreo     Int       @default(1)
+  codigo_barras_presentacion  String?   @unique @db.VarChar(50)
+  activo                      Boolean   @default(true)
+  created_at                  DateTime  @default(now()) @db.Timestamptz()
+  
+  // Relaciones
+  producto                    Producto  @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  presentacion                Presentacion @relation(fields: [presentacion_id], references: [id])
+  precios_especiales          ListaPrecioCliente[]
+  detalle_reabastecimiento  DetalleReabastecimiento[]
+  
+  @@unique([producto_id, presentacion_id])
+  @@map("productos_presentaciones")
+}
+
+model Proveedor {
+  id                  Int       @id @default(autoincrement())
+  razon_social        String    @db.VarChar(200)
+  nombre_comercial    String?   @db.VarChar(200)
+  nit_rfc             String?   @unique @db.VarChar(20)
+  contacto_nombres    String?   @db.VarChar(200)
+  contacto_telefono   String?   @db.VarChar(20)
+  contacto_email      String?   @db.VarChar(100)
+  direccion_completa  String?   @db.Text
+  latitud             Decimal?  @db.Decimal(10, 7)
+  longitud            Decimal?  @db.Decimal(10, 7)
+  dias_entrega        String?   @db.VarChar(100)
+  condiciones_pago    String?   @db.VarChar(200)
+  activo              Boolean   @default(true)
+  notas               String?   @db.Text
+  created_at          DateTime  @default(now()) @db.Timestamptz()
+  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamptz()
+  deleted_at          DateTime? @db.Timestamptz()
+  deleted_by          Int?
+  motivo_eliminacion  String?   @db.Text
+  
+  // Relaciones
+  lotes               Lote[]
+  ordenes_reabastecimiento  OrdenReabastecimiento[]
+  eliminador          Usuario?  @relation("ProveedorEliminador", fields: [deleted_by], references: [id])
+  
+  @@map("proveedores")
+}
+
+model Lote {
+  id                               Int                   @id @default(autoincrement())
+  producto_id                      Int
+  proveedor_id                     Int?
+  codigo_lote                      String                @db.VarChar(100)
+  codigo_proveedor                 String?               @db.VarChar(100)
+  fecha_ingreso                    DateTime              @default(now()) @db.Date
+  fecha_fabricacion                DateTime?             @db.Date
+  fecha_vencimiento                DateTime              @db.Date
+  presentacion_recibida_id         Int
+  cantidad_recibida_presentacion   Int
+  cantidad_unidades_inicial        Int
+  cantidad_unidades_disponible     Int
+  unidades_por_presentacion        Int
+  costo_unitario                   Decimal?              @db.Decimal(10, 2)
+  costo_total                      Decimal?              @db.Decimal(12, 2)
+  estado                           EstadoLote            @default(Disponible)
+  ubicacion_almacen                String?               @db.VarChar(50)
+  notas                            String?               @db.Text
+  created_at                       DateTime              @default(now()) @db.Timestamptz()
+  updated_at                       DateTime              @default(now()) @updatedAt @db.Timestamptz()
+  
+  // Relaciones
+  producto                         Producto              @relation(fields: [producto_id], references: [id])
+  proveedor                        Proveedor?            @relation(fields: [proveedor_id], references: [id])
+  presentacion                     Presentacion          @relation(fields: [presentacion_recibida_id], references: [id])
+  movimientos                      MovimientoInventario[]
+  detalle_pedidos                  DetallePedido[]
+  
+  @@unique([producto_id, codigo_lote])
+  @@map("lotes")
+  @@index([producto_id])
+  @@index([estado])
+  @@index([fecha_vencimiento])
+  @@index([producto_id, estado])             // consulta de stock disponible
+}
+
+model Ruta {
+  id                      Int            @id @default(autoincrement())
+  nombre                  String         @db.VarChar(100)
+  descripcion             String?        @db.Text
+  repartidor_asignado_id  Int?
+  zona_geografica         String?        @db.VarChar(100)
+  color_mapa              String?        @db.VarChar(7)
+  activo                  Boolean        @default(true)
+  created_at              DateTime       @default(now()) @db.Timestamptz()
+  updated_at              DateTime       @default(now()) @updatedAt @db.Timestamptz()
+  
+  // Relaciones - AGREGAR ESTAS LÍNEAS
+  repartidor              Usuario?       @relation("RepartidorRuta", fields: [repartidor_asignado_id], references: [id])
+  clientes                Cliente[]      @relation("RutaCliente")  // ← AGREGAR ESTA LÍNEA
+  ruta_clientes           RutaCliente[]
+  pedidos                 Pedido[]
+  
+  @@map("rutas")
+}
+
+model Cliente {
+  id                             Int              @id @default(autoincrement())
+  razon_social                   String           @db.VarChar(200)
+  nombre_comercial               String?          @db.VarChar(200)
+  nit_rfc                        String?          @unique @db.VarChar(20)
+  regimen_fiscal                 String?          @db.VarChar(100)
+  contacto_nombres               String?          @db.VarChar(100)
+  contacto_apellido_paterno      String?          @db.VarChar(50)
+  contacto_apellido_materno      String?          @db.VarChar(50)
+  contacto_telefono              String           @db.VarChar(20)
+  contacto_whatsapp              String?          @db.VarChar(20)
+  contacto_email                 String?          @db.VarChar(100)
+  direccion_calle                String?          @db.VarChar(200)
+  direccion_numero               String?          @db.VarChar(20)
+  direccion_colonia              String?          @db.VarChar(100)
+  direccion_ciudad               String?          @db.VarChar(100)
+  direccion_codigo_postal        String?          @db.VarChar(10)
+  direccion_referencias          String?          @db.Text
+  latitud                        Decimal?         @db.Decimal(10, 7)
+  longitud                       Decimal?         @db.Decimal(10, 7)
+  horario_recepcion_desde        DateTime?        @db.Time()
+  horario_recepcion_hasta        DateTime?        @db.Time()
+  dias_entrega                   String?          @db.VarChar(50)
+  tiempo_promedio_entrega_minutos Int?
+  preventista_asignado_id        Int?
+  ruta_id                        Int?
+  lista_precios_especial         Boolean          @default(false)
+  credito_habilitado             Boolean          @default(false)
+  limite_credito                 Decimal?         @db.Decimal(12, 2)
+  dias_credito                   Int              @default(0)
+  saldo_pendiente                Decimal?         @default(0) @db.Decimal(12, 2)
+  tipo_cliente                   String?          @db.VarChar(50)
+  frecuencia_promedio_dias       Int?
+  valor_promedio_pedido          Decimal?         @db.Decimal(12, 2)
+  estado                         EstadoCliente    @default(Activo)
+  notas_internas                 String?          @db.Text
+  created_at                     DateTime         @default(now()) @db.Timestamptz()
+  updated_at                     DateTime         @default(now()) @updatedAt @db.Timestamptz()
+  promociones                    Promocion[]
+  deleted_at                     DateTime?        @db.Timestamptz()
+  deleted_by                     Int?
+  motivo_eliminacion             String?          @db.Text
+  eliminador                     Usuario?         @relation("ClienteEliminador", fields: [deleted_by], references: [id])
+
+  // Relaciones
+  preventista                    Usuario?         @relation("PreventistaAsignado", fields: [preventista_asignado_id], references: [id])
+  ruta                           Ruta?            @relation("RutaCliente", fields: [ruta_id], references: [id])  // ← CAMBIAR "RutaCliente"
+  ruta_cliente                   RutaCliente[]
+  pedidos                        Pedido[]
+  precios_especiales             ListaPrecioCliente[]
+  
+  @@map("clientes")
+}
+
+model RutaCliente {
+  id                             Int       @id @default(autoincrement())
+  ruta_id                        Int
+  cliente_id                     Int
+  orden_visita                   Int
+  distancia_desde_origen         Decimal?  @db.Decimal(10, 2)
+  tiempo_estimado_desde_origen   Int?
+  activo                         Boolean   @default(true)
+  
+  // Relaciones
+  ruta                           Ruta      @relation(fields: [ruta_id], references: [id], onDelete: Cascade)
+  cliente                        Cliente   @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  
+  @@unique([ruta_id, cliente_id])
+  @@unique([ruta_id, orden_visita])
+  @@map("ruta_clientes")
+}
+
+model Vehiculo {
+  id           Int       @id @default(autoincrement())
+  matricula    String    @unique @db.VarChar(20)
+  marca        String?   @db.VarChar(50)
+  modelo       String?   @db.VarChar(50)
+  anio         Int?
+  color        String?   @db.VarChar(30)
+  tipo         String?   @db.VarChar(30)   // Camioneta, Moto, Camion, etc.
+  capacidad_kg Decimal?  @db.Decimal(8, 2)
+  activo       Boolean   @default(true)
+  notas        String?   @db.Text
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+  updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz()
+ 
+  pedidos      Pedido[]
+ 
+  @@map("vehiculos")
+}
+
+model Pedido {
+  id                        Int            @id @default(autoincrement())
+  numero_pedido             String         @unique @db.VarChar(20)
+  cliente_id                Int
+  preventista_id            Int?
+  repartidor_id             Int?
+  ruta_id                   Int?
+  estado                    EstadoPedido   @default(Borrador)
+  metodo_pago               MetodoPago     @default(Efectivo)
+  estado_pago               EstadoPago     @default(Pendiente)
+  subtotal                  Decimal?       @default(0) @db.Decimal(12, 2)
+  descuento_general         Decimal?       @default(0) @db.Decimal(10, 2)
+  iva_total                 Decimal?       @default(0) @db.Decimal(10, 2)
+  ieps_total                Decimal?       @default(0) @db.Decimal(10, 2)
+  total_monto               Decimal?       @default(0) @db.Decimal(12, 2)
+  fecha_creacion            DateTime       @default(now()) @db.Timestamptz()
+  fecha_confirmacion        DateTime?      @db.Timestamptz()
+  fecha_entrega_programada  DateTime?      @db.Date
+  fecha_entrega_real        DateTime?      @db.Timestamptz()
+  version                   Int            @default(1)
+  notas_pedido              String?        @db.Text
+  comprobante_pago_url      String?        @db.Text
+  created_by                Int?
+  updated_at                DateTime       @default(now()) @updatedAt @db.Timestamptz()
+  
+  // Relaciones
+  cliente                   Cliente        @relation(fields: [cliente_id], references: [id])
+  preventista               Usuario?       @relation("Preventista", fields: [preventista_id], references: [id])
+  repartidor                Usuario?       @relation("Repartidor", fields: [repartidor_id], references: [id])
+  ruta                      Ruta?          @relation(fields: [ruta_id], references: [id])
+  creador                   Usuario?       @relation("Creador", fields: [created_by], references: [id])
+  detalles                  DetallePedido[]
+  movimientos_inventario    MovimientoInventario[]
+  vehiculo_id   Int?
+  vehiculo      Vehiculo?  @relation(fields: [vehiculo_id], references: [id])
+
+  deleted_at                DateTime?      @db.Timestamptz()
+  deleted_by                Int?
+  motivo_eliminacion        String?        @db.Text
+  eliminador                Usuario?       @relation("Eliminador", fields: [deleted_by], references: [id])
+
+  @@map("pedidos")
+}
+
+model DetallePedido {
+  id                                 Int                  @id @default(autoincrement())
+  pedido_id                          Int
+  producto_id                        Int
+  presentacion_id                    Int
+  cantidad_presentacion_solicitada   Int
+  unidades_equivalentes_totales      Int
+  precio_unitario_presentacion       Decimal              @db.Decimal(10, 2)
+  subtotal_solicitado                Decimal              @db.Decimal(12, 2)
+  cantidad_presentacion_entregada    Int                  @default(0)
+  unidades_equivalentes_entregadas   Int                  @default(0)
+  cantidad_presentacion_devuelta     Int                  @default(0)
+  motivo_devolucion                  String?              @db.Text
+  lote_fifo_utilizado_id             Int?
+  estado_linea                       EstadoLineaPedido    @default(Pendiente)
+  created_at                         DateTime             @default(now()) @db.Timestamptz()
+  
+  // Relaciones
+  pedido                             Pedido               @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
+  producto                           Producto             @relation(fields: [producto_id], references: [id])
+  presentacion                       Presentacion         @relation(fields: [presentacion_id], references: [id])
+  lote_fifo                          Lote?                @relation(fields: [lote_fifo_utilizado_id], references: [id])
+  
+  @@map("detalle_pedidos")
+}
+
+model MovimientoInventario {
+  id                 String         @id @default(uuid()) @db.Uuid
+  lote_id            Int
+  pedido_id          Int?
+  usuario_id         Int?
+  tipo               TipoMovimiento
+  cantidad_unidades  Int
+  stock_anterior     Int
+  stock_resultante   Int
+  motivo             String?        @db.Text
+  costo_unitario     Decimal?       @db.Decimal(10, 2)
+  costo_total        Decimal?       @db.Decimal(12, 2)
+  fecha_movimiento   DateTime       @default(now()) @db.Timestamptz()
+  created_at         DateTime       @default(now()) @db.Timestamptz()
+  
+  // Relaciones
+  lote               Lote           @relation(fields: [lote_id], references: [id])
+  pedido             Pedido?        @relation(fields: [pedido_id], references: [id])
+  usuario            Usuario?       @relation(fields: [usuario_id], references: [id])
+  
+  @@map("movimientos_inventario")
+}
+
+model ListaPrecioCliente {
+  id                        Int       @id @default(autoincrement())
+  cliente_id                Int
+  producto_presentacion_id  Int
+  precio_especial           Decimal   @db.Decimal(10, 2)
+  vigencia_desde            DateTime  @default(now()) @db.Date
+  vigencia_hasta            DateTime? @db.Date
+  activo                    Boolean   @default(true)
+  created_at                DateTime  @default(now()) @db.Timestamptz()
+  
+  // Relaciones
+  cliente                   Cliente   @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  producto_presentacion     ProductoPresentacion @relation(fields: [producto_presentacion_id], references: [id], onDelete: Cascade)
+  
+  @@unique([cliente_id, producto_presentacion_id])
+  @@map("lista_precios_clientes")
+}
+
+model Promocion {
+  id                        Int        @id @default(autoincrement())
+  nombre                    String     @db.VarChar(200)
+  descripcion               String?    @db.Text
+  tipo_promocion            String     @db.VarChar(50)
+  producto_condicion_id     Int?
+  cantidad_minima_condicion Int?
+  presentacion_condicion_id Int?
+  producto_beneficio_id     Int?
+  cantidad_beneficio        Int?
+  presentacion_beneficio_id Int?
+  descuento_porcentaje      Decimal?   @db.Decimal(5, 2)
+  descuento_monto           Decimal?   @db.Decimal(10, 2)
+  aplica_a_todos_clientes   Boolean    @default(false)
+  cliente_especifico_id     Int?
+  fecha_inicio              DateTime   @db.Timestamptz()
+  fecha_fin                 DateTime   @db.Timestamptz()
+  activo                    Boolean    @default(true)
+  created_at                DateTime   @default(now()) @db.Timestamptz()
+  updated_at                DateTime   @default(now()) @updatedAt @db.Timestamptz()
+  
+  // Relaciones
+  producto_condicion        Producto?  @relation("ProductoCondicion", fields: [producto_condicion_id], references: [id])
+  presentacion_condicion    Presentacion? @relation("PresentacionCondicion", fields: [presentacion_condicion_id], references: [id])
+  producto_beneficio        Producto?  @relation("ProductoBeneficio", fields: [producto_beneficio_id], references: [id])
+  presentacion_beneficio    Presentacion? @relation("PresentacionBeneficio", fields: [presentacion_beneficio_id], references: [id])
+  cliente_especifico        Cliente?   @relation(fields: [cliente_especifico_id], references: [id])
+  
+  @@map("promociones")
+}
+
+model CorteCaja {
+  id                       Int         @id @default(autoincrement())
+  usuario_id               Int
+  tipo_corte               TipoCierre
+  fecha_apertura           DateTime    @db.Timestamptz()
+  fecha_cierre             DateTime?   @db.Timestamptz()
+  efectivo_inicial         Decimal?    @default(0) @db.Decimal(12, 2)
+  efectivo_final           Decimal?    @db.Decimal(12, 2)
+  efectivo_esperado        Decimal?    @db.Decimal(12, 2)
+  diferencia               Decimal?    @db.Decimal(12, 2)
+  total_ventas_efectivo    Decimal?    @default(0) @db.Decimal(12, 2)
+  total_ventas_transferencia Decimal?  @default(0) @db.Decimal(12, 2)
+  total_ventas_tarjeta     Decimal?    @default(0) @db.Decimal(12, 2)
+  total_ventas_credito     Decimal?    @default(0) @db.Decimal(12, 2)
+  total_ventas             Decimal?    @default(0) @db.Decimal(12, 2)
+  total_devoluciones       Decimal?    @default(0) @db.Decimal(12, 2)
+  total_gastos             Decimal?    @default(0) @db.Decimal(12, 2)
+  estado                   String      @default("Abierto") @db.VarChar(20)
+  notas                    String?     @db.Text
+  created_at               DateTime    @default(now()) @db.Timestamptz()
+  updated_at               DateTime    @default(now()) @updatedAt @db.Timestamptz()
+  
+  // Relaciones
+  usuario                  Usuario     @relation(fields: [usuario_id], references: [id])
+  
+  @@map("cortes_caja")
+}
+
+model AuditoriaLog {
+  id              String    @id @default(uuid()) @db.Uuid  
+  // Prisma usa su propio generador de UUID, no uuid_generate_v4()
+  
+  usuario_id      Int
+  sesion_id       String?   @db.Uuid  
+  // Quita el @default(dbgenerated("uuid_generate_v4()"))
+  
+  accion          String    @db.VarChar(50)
+  modulo          String?   @db.VarChar(50)
+  tabla_afectada  String?   @db.VarChar(100)
+  registro_id     String?   @db.VarChar(100)
+  valor_anterior  Json?
+  valor_nuevo     Json?
+  ip_origen       String?   @db.Inet
+  user_agent      String?   @db.Text
+  dispositivo     String?   @db.VarChar(100)
+  navegador       String?   @db.VarChar(100)
+  fecha_hora      DateTime  @default(now()) @db.Timestamptz()
+  
+  usuario         Usuario   @relation(fields: [usuario_id], references: [id])
+  
+  @@map("auditoria_logs")
+}
+
+model MetaComercial {
+  id                 Int       @id @default(autoincrement())
+  usuario_id         Int
+  tipo_meta          String    @db.VarChar(50)
+  monto_objetivo     Decimal?  @db.Decimal(12, 2)
+  cantidad_objetivo  Int?
+  periodo_inicio     DateTime  @db.Date
+  periodo_fin        DateTime  @db.Date
+  monto_alcanzado    Decimal?  @default(0) @db.Decimal(12, 2)
+  cantidad_alcanzada Int       @default(0)
+  activo             Boolean   @default(true)
+  created_at         DateTime  @default(now()) @db.Timestamptz()
+  
+  // Relaciones
+  usuario            Usuario   @relation(fields: [usuario_id], references: [id])
+  
+  @@map("metas_comerciales")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REABASTECIMIENTO (compras a proveedores)
+// ═══════════════════════════════════════════════════════════════
+
+enum EstadoReabastecimiento {
+  Pendiente
+  Recibido_Parcial
+  Recibido_Total
+  Cancelado
+}
+
+model OrdenReabastecimiento {
+  id                  Int                       @id @default(autoincrement())
+  numero_orden        String                    @unique @db.VarChar(20)
+  proveedor_id        Int
+  estado              EstadoReabastecimiento    @default(Pendiente)
+  fecha_solicitud     DateTime                  @default(now()) @db.Timestamptz()
+  fecha_recepcion     DateTime?                 @db.Timestamptz()
+  fecha_esperada      DateTime?                 @db.Date
+  subtotal            Decimal                   @default(0) @db.Decimal(12, 2)
+  total               Decimal                   @default(0) @db.Decimal(12, 2)
+  notas               String?                   @db.Text
+  solicitado_por_id   Int
+  recibido_por_id     Int?
+
+  // Soft delete
+  deleted_at          DateTime?                 @db.Timestamptz()
+  deleted_by          Int?
+  motivo_eliminacion  String?                   @db.Text
+
+  created_at          DateTime                  @default(now()) @db.Timestamptz()
+  updated_at          DateTime                  @default(now()) @updatedAt @db.Timestamptz()
+
+  // Relaciones
+  proveedor           Proveedor                 @relation(fields: [proveedor_id], references: [id])
+  solicitante         Usuario                   @relation("SolicitanteReabastecimiento", fields: [solicitado_por_id], references: [id])
+  receptor            Usuario?                  @relation("ReceptorReabastecimiento", fields: [recibido_por_id], references: [id])
+  eliminador          Usuario?                  @relation("EliminadorReabastecimiento", fields: [deleted_by], references: [id])
+  detalles            DetalleReabastecimiento[]
+
+  @@map("ordenes_reabastecimiento")
+}
+
+model DetalleReabastecimiento {
+  id                          Int                    @id @default(autoincrement())
+  orden_id                    Int
+  producto_presentacion_id    Int
+  cantidad_solicitada         Int
+  cantidad_recibida           Int                    @default(0)
+  precio_unitario_compra      Decimal                @db.Decimal(10, 2)
+  subtotal                    Decimal                @db.Decimal(12, 2)
+
+  orden                       OrdenReabastecimiento  @relation(fields: [orden_id], references: [id], onDelete: Cascade)
+  producto_presentacion       ProductoPresentacion   @relation(fields: [producto_presentacion_id], references: [id])
+
+  @@map("detalle_reabastecimiento")
+}

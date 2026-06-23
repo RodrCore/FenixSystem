@@ -1,0 +1,213 @@
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card" style="border-left-color:#2563EB">
+      <div class="stat-val">{{ stats.total | number }}</div>
+      <div class="stat-lbl">Total órdenes</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#D97706">
+      <div class="stat-val">{{ stats.pendientes | number }}</div>
+      <div class="stat-lbl">Pendientes</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#059669">
+      <div class="stat-val">{{ stats.recibidas_hoy | number }}</div>
+      <div class="stat-lbl">Recibidas hoy</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#E11D48">
+      <div class="stat-val">Bs {{ stats.total_mes | number:'1.2-2' }}</div>
+      <div class="stat-lbl">Total del mes</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" [formGroup]="filterForm">
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input formControlName="buscar"
+        placeholder="Buscar por N° orden, proveedor..."
+        class="search-input" />
+    </div>
+
+    <select formControlName="estado" class="filter-sel" (change)="onFilterChange()">
+      <option *ngFor="let e of estadosDisponibles" [value]="e.v">{{ e.n }}</option>
+    </select>
+
+    <button class="btn btn-ghost" *ngIf="hayFiltrosActivos" (click)="limpiarFiltros()">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+      Limpiar
+    </button>
+
+    <div class="spacer"></div>
+
+    <button class="btn btn-primary" (click)="abrirNuevo()" *ngIf="puedeCrear">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Nueva orden
+    </button>
+  </div>
+
+  <!-- TABLA -->
+  <div class="table-card">
+    <div *ngIf="loading" class="loading-bar"></div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° Orden</th>
+            <th>Proveedor</th>
+            <th>Fecha solicitud</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let o of ordenes" (click)="verDetalle(o)" class="row-clickable">
+            <td class="cell-numero">
+              <span class="num-orden">{{ o.numero_orden }}</span>
+            </td>
+
+            <td>
+              <div class="cell-prov">
+                <div class="prov-name">{{ o.proveedor?.razon_social }}</div>
+                <div class="muted" *ngIf="o.proveedor?.nombre_comercial">
+                  {{ o.proveedor?.nombre_comercial }}
+                </div>
+              </div>
+            </td>
+
+            <td class="td-muted">
+              {{ o.fecha_solicitud | date:'dd MMM yyyy':'':'es' }}
+              <div style="font-size:10px">{{ o.fecha_solicitud | date:'HH:mm' }}</div>
+            </td>
+
+            <td class="td-center">
+              <span class="items-badge">{{ o.cantidad_items ?? 0 }}</span>
+            </td>
+
+            <td class="td-total">
+              Bs {{ o.total | number:'1.2-2' }}
+            </td>
+
+            <td>
+              <span class="badge"
+                [style.color]="estadoColor(o.estado)"
+                [style.background]="estadoColor(o.estado) + '18'"
+                [style.border-color]="estadoColor(o.estado) + '40'">
+                {{ formatEstado(o.estado) }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-btns">
+                <button class="act-btn" title="Ver detalle"
+                  (click)="verDetalle(o); $event.stopPropagation()">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.75"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    viewBox="0 0 24 24" width="15" height="15">
+                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/>
+                    <path d="M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6"/>
+                  </svg>
+                </button>
+                <button class="act-btn" title="Descargar PDF"
+                  (click)="descargarPdf(o, $event)">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.75"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    viewBox="0 0 24 24" width="15" height="15">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="!loading && ordenes.length === 0">
+            <td colspan="7" class="empty-row">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5"
+                viewBox="0 0 24 24" width="32" height="32"
+                style="color:var(--color-candy-muted);margin-bottom:8px">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <p *ngIf="hayFiltrosActivos">No se encontraron órdenes</p>
+              <p *ngIf="!hayFiltrosActivos">Aún no hay órdenes de reabastecimiento</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="total > 0">
+      <span class="pag-info">
+        Mostrando {{ desde }}–{{ hasta }} de {{ total | number }} órdenes
+      </span>
+      <div class="pag-nums">
+        <button class="pag-btn pag-arrow" (click)="goPage(page - 1)"
+          [disabled]="page === 1">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+        <ng-container *ngFor="let n of pageNumbers">
+          <span *ngIf="n === -1" class="pag-ellipsis">…</span>
+          <button *ngIf="n !== -1" class="pag-btn"
+            [class.pag-active]="n === page" (click)="goPage(n)">{{ n }}</button>
+        </ng-container>
+        <button class="pag-btn pag-arrow" (click)="goPage(page + 1)"
+          [disabled]="page === pages">
+          <svg fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER DETALLE -->
+<app-reabastecimiento-detail
+  [ordenId]="ordenDetalleId"
+  [open]="detalleAbierto"
+  (closed)="cerrarDetalle()"
+  (actualizado)="onOrdenActualizada()"
+  (cancelRequest)="pedirCancelarOrden($event)"
+  (deleteRequest)="pedirEliminarOrden($event)"
+/>
+
+<!-- MODAL NUEVO -->
+<app-reabastecimiento-form
+  *ngIf="mostrarModalNuevo"
+  (created)="onCreado()"
+  (cancelled)="onNuevoCancelado()"
+/>
+
+<!-- MODAL CONFIRM -->
+<app-confirm-action
+  *ngIf="confirmConfig.open"
+  [title]="confirmConfig.title"
+  [message]="confirmConfig.message"
+  [itemName]="confirmConfig.itemName"
+  [confirmLabel]="confirmConfig.confirmLabel"
+  [type]="confirmConfig.type"
+  [askMotivo]="confirmConfig.askMotivo"
+  [requireMotivo]="confirmConfig.requireMotivo"
+  [motivoPlaceholder]="confirmConfig.motivoPlaceholder"
+  [loading]="confirmConfig.loading"
+  (confirmed)="onConfirmConfirmed($event)"
+  (cancelled)="onConfirmCancelled()"
+/>

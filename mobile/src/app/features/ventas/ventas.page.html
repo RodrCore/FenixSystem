@@ -1,0 +1,153 @@
+<app-navbar titulo="Mis ventas" />
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="refrescar($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="page-content">
+    <!-- Skeleton -->
+    <div *ngIf="loading">
+      <div
+        class="skeleton-row"
+        style="height: 72px; margin-bottom: 8px"
+        *ngFor="let i of [1,2,3,4,5]"
+      ></div>
+    </div>
+    <button class="btn-nueva-venta" routerLink="/ventas/nueva">
+      <svg
+        fill="none"
+        stroke="white"
+        stroke-width="2"
+        stroke-linecap="round"
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+      >
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Nueva Venta
+    </button>
+    <!-- Arriba del listado de ventas, junto al título -->
+    <div class="section-hdr">
+      <span class="section-title">Mis ventas</span>
+      <button class="link-btn" (click)="router.navigate(['/reportes'])">
+        Ver reportes
+      </button>
+    </div>
+    <!-- Lista de pedidos -->
+    <ng-container *ngIf="!loading">
+      <div *ngIf="!pedidos.length" class="empty-full">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          viewBox="0 0 24 24"
+          width="36"
+          height="36"
+          aria-hidden="true"
+        >
+          <path
+            d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"
+          />
+          <path
+            d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"
+          />
+          <path d="M9 12h6" />
+          <path d="M9 16h6" />
+        </svg>
+        <p>Sin ventas registradas</p>
+      </div>
+
+      <div
+        class="pedido-item"
+        *ngFor="let p of pedidos"
+        (click)="verDetalle(p.id)"
+      >
+        <div class="pi-left">
+          <!-- Estado indicador -->
+          <div class="pi-dot" [style.background]="estadoColor(p.estado)"></div>
+          <div>
+            <div class="pi-numero">{{ p.numero }}</div>
+            <div class="pi-cliente">{{ p.cliente?.razon_social ?? '–' }}</div>
+            <div class="pi-fecha">
+              {{ p.created_at | date:'dd MMM · HH:mm':'':'es' }}
+            </div>
+          </div>
+        </div>
+        <div class="pi-right">
+          <div class="pi-total">Bs {{ p.total | number:'1.2-2' }}</div>
+          <span
+            class="pi-estado"
+            [style.color]="estadoColor(p.estado)"
+            [style.background]="estadoColor(p.estado) + '18'"
+          >
+            {{ formatearEstado(p.estado) }}
+          </span>
+          <button
+            *ngIf="puedeEditarAsignacion(p)"
+            class="pi-edit"
+            (click)="abrirEditar(p, $event)"
+            aria-label="Editar asignación"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              aria-hidden="true"
+            >
+              <path
+                d="M7 7h-1a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"
+              />
+              <path
+                d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97l-8.415 8.385v3h3l8.385-8.415z"
+              />
+            </svg>
+          </button>
+          <!-- Botón cancelar -->
+          <button
+            *ngIf="puedeCancelar(p)"
+            class="pi-cancel"
+            (click)="cancelar(p, $event)"
+            aria-label="Cancelar pedido"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ion-infinite-scroll
+      (ionInfinite)="cargarMas($event)"
+      [disabled]="page >= totalPages"
+    >
+      <ion-infinite-scroll-content
+        loadingText="Cargando..."
+      ></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  </div>
+</ion-content>
+<app-editar-pedido-modal
+  *ngIf="pedidoEditando"
+  [pedido]="pedidoEditando"
+  (guardado)="onPedidoGuardado()"
+  (cancelado)="onEditarCancelado()"
+/>
+<app-tabbar tab="ventas" />

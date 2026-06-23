@@ -1,0 +1,170 @@
+<app-navbar
+  [titulo]="esPreventista ? 'Mis ventas' : 'Mis entregas'"
+  [mostrarBack]="true" />
+ 
+<ion-content [fullscreen]="true">
+  <div class="page-content">
+ 
+    <!-- ── SELECTOR DE MES Y AÑO ────────────────────────── -->
+    <div class="periodo-selector">
+      <select [value]="mesActual" (change)="cambiarMes(+$any($event.target).value)"
+        class="periodo-select">
+        <option *ngFor="let m of meses" [value]="m.v">{{ m.n }}</option>
+      </select>
+ 
+      <select [value]="anioActual" (change)="cambiarAnio(+$any($event.target).value)"
+        class="periodo-select" style="width: 90px">
+        <option *ngFor="let a of anios" [value]="a">{{ a }}</option>
+      </select>
+    </div>
+ 
+    <!-- ── LOADING ──────────────────────────────────────── -->
+    <div *ngIf="loading">
+      <div class="skeleton-row" style="height:80px;margin-bottom:8px"
+        *ngFor="let i of [1,2,3,4]"></div>
+    </div>
+ 
+    <!-- ═══════════════════════════════════════════════════
+         REPORTE PREVENTISTA
+    ═══════════════════════════════════════════════════ -->
+    <ng-container *ngIf="!loading && esPreventista && data">
+ 
+      <!-- Cards de stats -->
+      <div class="stats-grid">
+        <div class="stat-card" style="border-left-color: #2563EB">
+          <div class="sc-label">Total ventas</div>
+          <div class="sc-value">{{ data.resumen.total_ventas }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #E11D48">
+          <div class="sc-label">Facturado</div>
+          <div class="sc-value">Bs {{ data.resumen.monto_facturado | number:'1.2-2' }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #059669">
+          <div class="sc-label">Entregado</div>
+          <div class="sc-value">Bs {{ data.resumen.monto_entregado | number:'1.2-2' }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #DC2626">
+          <div class="sc-label">Cancelado</div>
+          <div class="sc-value">Bs {{ data.resumen.monto_cancelado | number:'1.2-2' }}</div>
+        </div>
+      </div>
+ 
+      <!-- Resumen por estado -->
+      <div class="section-hdr">
+        <span class="section-title">Por estado</span>
+      </div>
+ 
+      <div *ngIf="!estadosConDatos().length" class="empty-state">
+        Sin ventas este mes
+      </div>
+ 
+      <div class="estado-row" *ngFor="let e of estadosConDatos()">
+        <span class="er-badge"
+          [style.color]="estadoColor(e.key)"
+          [style.background]="estadoColor(e.key) + '20'">
+          {{ e.key.replace('_', ' ') }}
+        </span>
+        <span class="er-count">{{ e.data.cantidad }}</span>
+        <span class="er-monto">Bs {{ e.data.monto | number:'1.2-2' }}</span>
+      </div>
+ 
+      <!-- Ventas individuales -->
+      <div class="section-hdr" style="margin-top: 18px">
+        <span class="section-title">Ventas individuales</span>
+      </div>
+ 
+      <div *ngIf="!data.ventas?.length" class="empty-state">
+        Sin ventas registradas
+      </div>
+ 
+      <div class="venta-card" *ngFor="let v of data.ventas">
+        <div class="vc-left">
+          <div class="vc-cliente">{{ v.cliente }}</div>
+          <div class="vc-meta">
+            {{ v.fecha | date:'dd MMM HH:mm':'':'es' }} · {{ v.numero }}
+          </div>
+        </div>
+        <div class="vc-right">
+          <div class="vc-monto">Bs {{ v.total | number:'1.2-2' }}</div>
+          <span class="vc-badge"
+            [style.color]="estadoColor(v.estado)"
+            [style.background]="estadoColor(v.estado) + '20'">
+            {{ v.estado.replace('_', ' ') }}
+          </span>
+        </div>
+      </div>
+ 
+      <!-- Promedio final -->
+      <div class="total-final" *ngIf="data.resumen.total_ventas > 0">
+        <span class="tf-label">Promedio por venta</span>
+        <span class="tf-value">Bs {{ data.resumen.promedio_por_venta | number:'1.2-2' }}</span>
+      </div>
+    </ng-container>
+ 
+    <!-- ═══════════════════════════════════════════════════
+         REPORTE REPARTIDOR
+    ═══════════════════════════════════════════════════ -->
+    <ng-container *ngIf="!loading && esRepartidor && data">
+ 
+      <div class="stats-grid">
+        <div class="stat-card" style="border-left-color: #2563EB">
+          <div class="sc-label">Total entregas</div>
+          <div class="sc-value">{{ data.resumen.total_entregas }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #059669">
+          <div class="sc-label">Completas</div>
+          <div class="sc-value">{{ data.resumen.entregas_completas }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #F59E0B">
+          <div class="sc-label">Parciales</div>
+          <div class="sc-value">{{ data.resumen.entregas_parciales }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #DC2626">
+          <div class="sc-label">Devoluciones</div>
+          <div class="sc-value">{{ data.resumen.devoluciones }}</div>
+        </div>
+      </div>
+ 
+      <div class="section-hdr">
+        <span class="section-title">Día por día</span>
+      </div>
+ 
+      <div *ngIf="!data.por_dia?.length" class="empty-state">
+        Sin entregas registradas este mes
+      </div>
+ 
+      <div class="dia-row" *ngFor="let d of data.por_dia">
+        <div class="dr-left">
+          <div class="dr-fecha">{{ d.fecha | date:'EEE dd MMM':'':'es' | titlecase }}</div>
+          <div class="dr-detalle">
+            <span style="color:#059669">{{ d.entregas }} completas</span>
+            <span *ngIf="d.entregas_parciales" style="color:#F59E0B">
+              · {{ d.entregas_parciales }} parciales
+            </span>
+          </div>
+        </div>
+        <div class="dr-monto">Bs {{ d.monto | number:'1.2-2' }}</div>
+      </div>
+ 
+      <!-- Total final -->
+      <div class="total-final" *ngIf="data.resumen.total_entregas > 0">
+        <span class="tf-label">Total entregado</span>
+        <span class="tf-value">Bs {{ data.resumen.monto_entregado | number:'1.2-2' }}</span>
+      </div>
+    </ng-container>
+ 
+  </div>
+ 
+  <!-- ── BOTÓN DESCARGAR PDF (flotante) ─────────────────── -->
+  <button class="fab-pdf" *ngIf="!loading && data" (click)="descargarPDF()">
+    <svg fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round"
+      stroke-linejoin="round" viewBox="0 0 24 24" width="20" height="20">
+      <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+      <path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+      <path d="M12 17v-6"/>
+      <path d="M9.5 14.5l2.5 2.5l2.5 -2.5"/>
+    </svg>
+    Descargar PDF
+  </button>
+ 
+</ion-content>

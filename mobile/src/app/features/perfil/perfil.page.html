@@ -1,0 +1,492 @@
+<app-navbar titulo="Mi perfil" [mostrarBack]="true" />
+
+<ion-content [fullscreen]="true">
+  <div class="page-content">
+    <!-- Skeleton -->
+    <div *ngIf="loading">
+      <div
+        class="skeleton-row"
+        style="height: 140px; margin-bottom: 14px"
+      ></div>
+      <div class="skeleton-row" style="height: 40px; margin-bottom: 14px"></div>
+      <div class="skeleton-row" style="height: 280px"></div>
+    </div>
+
+    <ng-container *ngIf="!loading && perfil">
+      <!-- ── CABECERA con avatar grande ─────────────────────── -->
+      <div class="perfil-header">
+        <button
+          class="ph-avatar-btn"
+          (click)="cambiarFoto()"
+          aria-label="Cambiar foto"
+        >
+          <img
+            *ngIf="avatarUrl"
+            [src]="avatarUrl"
+            alt=""
+            class="ph-avatar-img"
+          />
+          <div *ngIf="!avatarUrl" class="ph-avatar-iniciales">
+            {{ iniciales }}
+          </div>
+
+          <div class="ph-avatar-overlay">
+            <svg
+              fill="none"
+              stroke="white"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+            >
+              <path d="M15 8h.01" />
+              <path d="M9 17l3 -3l3 3" />
+              <path d="M14 14l1 -1l3 3" />
+              <path
+                d="M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2"
+              />
+            </svg>
+          </div>
+        </button>
+
+        <div class="ph-nombre">{{ nombreCompleto }}</div>
+        <div class="ph-rol">{{ perfil.rol?.nombre }}</div>
+        <div class="ph-email">{{ perfil.email }}</div>
+      </div>
+
+      <!-- ── TABS ────────────────────────────────────────────── -->
+      <div class="perfil-tabs">
+        <button
+          class="pt-tab"
+          [class.active]="tab === 'perfil'"
+          (click)="cambiarTab('perfil')"
+        >
+          Perfil
+        </button>
+        <button
+          class="pt-tab"
+          [class.active]="tab === 'seguridad'"
+          (click)="cambiarTab('seguridad')"
+        >
+          Seguridad
+        </button>
+        <button
+          class="pt-tab"
+          [class.active]="tab === 'sesion'"
+          (click)="cambiarTab('sesion')"
+        >
+          Sesión
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           TAB: PERFIL — datos personales
+      ═══════════════════════════════════════════════════════ -->
+      <div *ngIf="tab === 'perfil'" class="tab-content">
+        <div class="form-group">
+          <label class="form-label">Nombres</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="form.nombres"
+            placeholder="Tus nombres"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Apellido paterno</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="form.apellido_paterno"
+            placeholder="Apellido paterno"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Apellido materno</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="form.apellido_materno"
+            placeholder="Apellido materno (opcional)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <input
+            type="email"
+            class="form-input"
+            [(ngModel)]="form.email"
+            placeholder="tu@correo.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input
+            type="tel"
+            class="form-input"
+            [(ngModel)]="form.telefono"
+            placeholder="+591 ..."
+          />
+        </div>
+
+        <button
+          class="btn-guardar"
+          (click)="guardarDatos()"
+          [disabled]="guardandoDatos"
+        >
+          <svg
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+          >
+            <path d="M5 12l5 5l10-10" />
+          </svg>
+          {{ guardandoDatos ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           TAB: SEGURIDAD — cambio de contraseña
+      ═══════════════════════════════════════════════════════ -->
+      <div *ngIf="tab === 'seguridad'" class="tab-content">
+        <div class="info-banner">
+          <svg
+            fill="none"
+            stroke="#2563EB"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>Tu contraseña debe tener al menos 8 caracteres</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contraseña actual</label>
+          <div class="pwd-wrapper">
+            <input
+              [type]="mostrarActual ? 'text' : 'password'"
+              class="form-input"
+              [(ngModel)]="pwd.actual"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+            <button
+              class="pwd-toggle"
+              (click)="mostrarActual = !mostrarActual"
+              type="button"
+            >
+              <svg
+                *ngIf="!mostrarActual"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg
+                *ngIf="mostrarActual"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nueva contraseña</label>
+          <div class="pwd-wrapper">
+            <input
+              [type]="mostrarNueva ? 'text' : 'password'"
+              class="form-input"
+              [(ngModel)]="pwd.nueva"
+              placeholder="Al menos 8 caracteres"
+              autocomplete="new-password"
+            />
+            <button
+              class="pwd-toggle"
+              (click)="mostrarNueva = !mostrarNueva"
+              type="button"
+            >
+              <svg
+                *ngIf="!mostrarNueva"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg
+                *ngIf="mostrarNueva"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirmar nueva contraseña</label>
+          <div class="pwd-wrapper">
+            <input
+              [type]="mostrarConfirm ? 'text' : 'password'"
+              class="form-input"
+              [(ngModel)]="pwd.confirmacion"
+              placeholder="Repite la nueva contraseña"
+              autocomplete="new-password"
+            />
+            <button
+              class="pwd-toggle"
+              (click)="mostrarConfirm = !mostrarConfirm"
+              type="button"
+            >
+              <svg
+                *ngIf="!mostrarConfirm"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg
+                *ngIf="mostrarConfirm"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button
+          class="btn-guardar"
+          (click)="guardarPassword()"
+          [disabled]="guardandoPwd"
+        >
+          <svg
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+          >
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          {{ guardandoPwd ? 'Actualizando...' : 'Cambiar contraseña' }}
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           TAB: SESIÓN
+      ═══════════════════════════════════════════════════════ -->
+      <div *ngIf="tab === 'sesion'" class="tab-content">
+        <!-- Selector de tema -->
+        <div class="tema-selector">
+          <div class="ts-header">
+            <div
+              class="ts-icon"
+              style="background: rgba(124, 58, 237, 0.12); color: #7c3aed"
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </div>
+            <div class="ts-text">
+              <div class="ts-title">Apariencia</div>
+              <div class="ts-sub">Elige tu tema preferido</div>
+            </div>
+          </div>
+
+          <div class="ts-options">
+            <button
+              class="ts-opt"
+              [class.active]="temaActual === 'claro'"
+              (click)="cambiarTema('claro')"
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <path
+                  d="M12 1v2m0 18v2m11-11h-2M3 12H1m17.07-7.07-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0-1.41-1.41M6.34 6.34 4.93 4.93"
+                />
+              </svg>
+              <span>Claro</span>
+            </button>
+            <button
+              class="ts-opt"
+              [class.active]="temaActual === 'oscuro'"
+              (click)="cambiarTema('oscuro')"
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <span>Oscuro</span>
+            </button>
+            <button
+              class="ts-opt"
+              [class.active]="temaActual === 'sistema'"
+              (click)="cambiarTema('sistema')"
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+              >
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              <span>Sistema</span>
+            </button>
+          </div>
+        </div>
+        <button
+          class="action-item action-warning"
+          (click)="cerrarOtrasSesiones()"
+        >
+          <div
+            class="ai-icon"
+            style="background: rgba(245, 158, 11, 0.12); color: #d97706"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+            >
+              <rect x="4" y="5" width="16" height="14" rx="2" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+            </svg>
+          </div>
+          <div class="ai-text">
+            <div class="ai-title">Cerrar otras sesiones</div>
+            <div class="ai-sub">Cierra tus sesiones en otros dispositivos</div>
+          </div>
+          <svg
+            fill="none"
+            stroke="#94A3B8"
+            stroke-width="2"
+            stroke-linecap="round"
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+
+        <button class="action-item action-danger" (click)="cerrarSesion()">
+          <div
+            class="ai-icon"
+            style="background: rgba(225, 29, 72, 0.12); color: #e11d48"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </div>
+          <div class="ai-text">
+            <div class="ai-title">Cerrar sesión</div>
+            <div class="ai-sub">Salir de esta cuenta en este dispositivo</div>
+          </div>
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</ion-content>

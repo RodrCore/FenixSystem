@@ -1,0 +1,237 @@
+<!-- src/app/features/productos/components/producto-detail/producto-detail.html -->
+
+<div class="modal-wrap" role="dialog" aria-label="Detalle de producto">
+  <div class="modal-box">
+
+    <!-- Header -->
+    <div class="modal-hdr">
+      <div class="hdr-left">
+        <span class="modal-title">{{ producto.nombre }}</span>
+        <span class="badge" [class.badge-success]="producto.activo" [class.badge-off]="!producto.activo">
+          {{ producto.activo ? 'Activo' : 'Inactivo' }}
+        </span>
+      </div>
+      <div class="hdr-right">
+        <button class="act-btn" title="Editar" (click)="editRequest.emit(producto)">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/>
+          </svg>
+        </button>
+        <button class="close-btn" (click)="close.emit()" aria-label="Cerrar">
+          <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Info rápida -->
+    <div class="info-grid">
+      <div class="info-chip">
+        <span class="info-lbl">Código</span>
+        <span class="info-val">{{ producto.codigo_interno || '—' }}</span>
+      </div>
+      <div class="info-chip">
+        <span class="info-lbl">Categoría</span>
+        <span class="info-val">{{ producto.categoria?.nombre || '—' }}</span>
+      </div>
+      <div class="info-chip">
+        <span class="info-lbl">Marca</span>
+        <span class="info-val">{{ producto.marca || '—' }}</span>
+      </div>
+      <div class="info-chip">
+        <span class="info-lbl">Stock total</span>
+        <span class="info-val" style="color:#059669;font-weight:500">{{ stockTotal | number }} uds</span>
+      </div>
+      <div class="info-chip">
+        <span class="info-lbl">Precio compra</span>
+        <span class="info-val">Bs {{ producto.precio_compra_promedio | number:'1.2-2' }}</span>
+      </div>
+      <div class="info-chip">
+        <span class="info-lbl">Margen</span>
+        <span class="info-val">{{ producto.margen_ganancia_porcentaje }}%</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn" [class.tab-active]="activeTab==='presentaciones'" (click)="activeTab='presentaciones'">
+        Presentaciones
+        <span class="tab-badge">{{ (producto.presentaciones || []).length }}</span>
+      </button>
+      <button class="tab-btn" [class.tab-active]="activeTab==='lotes'" (click)="activeTab='lotes'">
+        Lotes
+        <span class="tab-badge">{{ (producto.lotes || []).length }}</span>
+      </button>
+      <button class="tab-btn" [class.tab-active]="activeTab==='nuevo-lote'" (click)="activeTab='nuevo-lote'">
+        + Agregar lote
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- ══ TAB: PRESENTACIONES ══ -->
+      <ng-container *ngIf="activeTab === 'presentaciones'">
+
+        <!-- Lista presentaciones existentes -->
+        <div *ngIf="(producto.presentaciones || []).length > 0" class="items-list">
+          <div *ngFor="let pp of producto.presentaciones" class="item-row">
+            <div class="item-info">
+              <div class="item-name">{{ pp.presentacion.nombre }}</div>
+              <div class="item-detail">
+                {{ pp.unidades_equivalentes }} unidades ·
+                Venta: <strong>Bs {{ pp.precio_venta | number:'1.2-2' }}</strong>
+                <span *ngIf="pp.precio_mayoreo"> · Mayoreo: Bs {{ pp.precio_mayoreo | number:'1.2-2' }}</span>
+              </div>
+            </div>
+            <span class="badge" [class.badge-success]="pp.activo" [class.badge-off]="!pp.activo">
+              {{ pp.activo ? 'Activa' : 'Inactiva' }}
+            </span>
+          </div>
+        </div>
+
+        <p *ngIf="(producto.presentaciones || []).length === 0" class="empty-msg">
+          No hay presentaciones registradas.
+        </p>
+
+        <!-- Formulario nueva presentación -->
+        <div class="sub-section">
+          <div class="sub-title">Agregar presentación</div>
+          <form [formGroup]="ppForm" (ngSubmit)="submitPP()" novalidate>
+            <div class="form-row">
+              <div class="fld">
+                <label class="flbl">Presentación <span class="req">*</span></label>
+                <select formControlName="presentacion_id" class="fsel"
+                  [class.fsel-err]="ppForm.get('presentacion_id')?.touched && ppForm.get('presentacion_id')?.invalid">
+                  <option value="">Seleccionar...</option>
+                  <option *ngFor="let p of presentaciones" [value]="p.id">{{ p.nombre }}</option>
+                </select>
+              </div>
+              <div class="fld">
+                <label class="flbl">Unidades equivalentes <span class="req">*</span></label>
+                <input formControlName="unidades_equivalentes" class="finp" type="number" placeholder="12" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fld">
+                <label class="flbl">Precio venta (Bs) <span class="req">*</span></label>
+                <input formControlName="precio_venta" class="finp" type="number" step="0.01" placeholder="0.00" />
+              </div>
+              <div class="fld">
+                <label class="flbl">Precio mayoreo (Bs)</label>
+                <input formControlName="precio_mayoreo" class="finp" type="number" step="0.01" placeholder="0.00" />
+              </div>
+            </div>
+            <div *ngIf="ppError" class="srv-error">{{ ppError }}</div>
+            <div style="display:flex;justify-content:flex-end;margin-top:10px">
+              <button type="submit" class="btn btn-primary" [disabled]="savingPP">
+                {{ savingPP ? 'Guardando...' : 'Agregar presentación' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </ng-container>
+
+      <!-- ══ TAB: LOTES ══ -->
+      <ng-container *ngIf="activeTab === 'lotes'">
+        <div *ngIf="(producto.lotes || []).length > 0" class="items-list">
+          <div *ngFor="let lote of producto.lotes" class="item-row item-row-lote">
+            <div class="item-info" style="flex:1">
+              <div class="item-name">{{ lote.codigo_lote }}</div>
+              <div class="item-detail">
+                Vence: <strong>{{ lote.fecha_vencimiento | date:'dd MMM yyyy' }}</strong> ·
+                {{ lote.cantidad_unidades_disponible | number }} / {{ lote.cantidad_unidades_inicial | number }} uds
+                <span *ngIf="lote.ubicacion_almacen"> · Ubic: {{ lote.ubicacion_almacen }}</span>
+              </div>
+              <div class="stock-bar" style="margin-top:6px">
+                <div class="stock-fill" [style.width.%]="lotePct(lote)" [style.background]="loteColor(lote)"></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+              <span class="badge"
+                [class.badge-success]="lote.estado==='Disponible'"
+                [class.badge-off]="lote.estado==='Agotado'||lote.estado==='Vencido'"
+                [class.badge-warning]="lote.estado==='Cuarentena'||lote.estado==='Mermado'">
+                {{ lote.estado }}
+              </span>
+              <select class="fsel" style="height:28px;font-size:11px;padding:0 6px;"
+                [value]="lote.estado" (change)="cambiarEstadoLote(lote.id, $any($event.target).value)">
+                <option *ngFor="let e of estadoLoteOpts" [value]="e">{{ e }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="(producto.lotes || []).length === 0" class="empty-msg">
+          No hay lotes registrados. Agrega uno en la pestaña "+ Agregar lote".
+        </p>
+      </ng-container>
+
+      <!-- ══ TAB: NUEVO LOTE ══ -->
+      <ng-container *ngIf="activeTab === 'nuevo-lote'">
+        <form [formGroup]="loteForm" (ngSubmit)="submitLote()" novalidate>
+          <div class="form-row">
+            <div class="fld">
+              <label class="flbl">Código de lote <span class="req">*</span></label>
+              <input formControlName="codigo_lote" class="finp" placeholder="LOTE-PRD-0001-2026-01"
+                [class.finp-err]="loteForm.get('codigo_lote')?.touched && loteForm.get('codigo_lote')?.invalid" />
+            </div>
+            <div class="fld">
+              <label class="flbl">Fecha de vencimiento <span class="req">*</span></label>
+              <input formControlName="fecha_vencimiento" class="finp" type="date"
+                [class.finp-err]="loteForm.get('fecha_vencimiento')?.touched && loteForm.get('fecha_vencimiento')?.invalid" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fld">
+              <label class="flbl">Presentación recibida <span class="req">*</span></label>
+              <select formControlName="presentacion_recibida_id" class="fsel"
+                [class.fsel-err]="loteForm.get('presentacion_recibida_id')?.touched && loteForm.get('presentacion_recibida_id')?.invalid">
+                <option value="">Seleccionar...</option>
+                <option *ngFor="let p of presentaciones" [value]="p.id">{{ p.nombre }}</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label class="flbl">Cantidad recibida <span class="req">*</span></label>
+              <input formControlName="cantidad_recibida_presentacion" class="finp" type="number" placeholder="100" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fld">
+              <label class="flbl">Unidades por presentación <span class="req">*</span></label>
+              <input formControlName="unidades_por_presentacion" class="finp" type="number" placeholder="12" />
+            </div>
+            <div class="fld">
+              <label class="flbl">Costo unitario (Bs)</label>
+              <input formControlName="costo_unitario" class="finp" type="number" step="0.01" placeholder="0.00" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fld">
+              <label class="flbl">Proveedor</label>
+              <select formControlName="proveedor_id" class="fsel">
+                <option value="">Seleccionar...</option>
+                <option *ngFor="let p of proveedores" [value]="p.id">{{ p.razon_social }}</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label class="flbl">Ubicación almacén</label>
+              <input formControlName="ubicacion_almacen" class="finp" placeholder="A-01" />
+            </div>
+          </div>
+          <div class="fld" style="margin-top:4px">
+            <label class="flbl">Notas</label>
+            <input formControlName="notas" class="finp" placeholder="Observaciones del lote..." />
+          </div>
+          <div *ngIf="loteError" class="srv-error" style="margin-top:10px">{{ loteError }}</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+            <button type="submit" class="btn btn-primary" [disabled]="savingLote">
+              <svg *ngIf="savingLote" class="spin" fill="none" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="10"/>
+              </svg>
+              {{ savingLote ? 'Registrando...' : 'Registrar lote' }}
+            </button>
+          </div>
+        </form>
+      </ng-container>
+
+    </div>
+  </div>
+</div>

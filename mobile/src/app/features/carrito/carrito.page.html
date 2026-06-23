@@ -1,0 +1,106 @@
+<!-- mobile/src/app/features/carrito/carrito.page.html -->
+
+<app-navbar titulo="Carrito" [mostrarBack]="true" />
+
+<ion-content [fullscreen]="true">
+  <div class="page-content">
+
+    <!-- Carrito vacío -->
+    <div class="empty-cart" *ngIf="!items.length">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5"
+        viewBox="0 0 24 24" width="48" height="48" aria-hidden="true">
+        <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+        <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+        <path d="M1 3h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2 -1.61l1.6 -8.39h-19.32"/>
+      </svg>
+      <p>El carrito está vacío</p>
+      <button class="btn-agregar-prods" routerLink="/productos">Agregar productos</button>
+    </div>
+
+    <!-- Items del carrito -->
+    <ng-container *ngIf="items.length">
+
+      <div class="cart-item" *ngFor="let item of items">
+        <!-- Imagen placeholder -->
+        <div class="ci-thumb">
+          <img *ngIf="item.producto.imagen_url" [src]="item.producto.imagen_url" [alt]="item.producto.nombre" />
+          <svg *ngIf="!item.producto.imagen_url" fill="none" stroke="currentColor" stroke-width="1.5"
+            viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M15 8h.01"/>
+            <path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z"/>
+            <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l4 4"/>
+          </svg>
+        </div>
+
+        <!-- Info -->
+        <div class="ci-info">
+          <div class="ci-name">{{ item.producto.nombre }}</div>
+          <div class="ci-unit">{{ item.presentacion.nombre }}</div>
+          <div class="ci-ctrl">
+            <button class="ci-btn" (click)="decrementar(item)">−</button>
+            <span class="ci-qty">{{ item.cantidad }}</span>
+            <button class="ci-btn" (click)="incrementar(item)">+</button>
+          </div>
+        </div>
+
+        <!-- Precio y eliminar -->
+        <div class="ci-right">
+          <div class="ci-unit-price">Bs {{ item.precio_unit | number:'1.2-2' }}</div>
+          <div class="ci-total">Bs {{ item.total | number:'1.2-2' }}</div>
+          <button class="ci-delete" (click)="confirmarEliminar(item)" aria-label="Eliminar">
+            <svg fill="none" stroke="currentColor" stroke-width="1.75"
+              viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+              <path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/>
+              <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/>
+              <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Notas -->
+      <div class="notas-box">
+        <label class="notas-lbl">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75"
+            viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/>
+            <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"/>
+            <path d="M9 12h6"/><path d="M9 16h6"/>
+          </svg>
+          Notas / referencia de entrega
+        </label>
+        <textarea [(ngModel)]="notas" placeholder="Ej: Pared afiches, puerta rejas..." class="notas-input" rows="2"></textarea>
+      </div>
+
+      <!-- Totales -->
+      <div class="totales-box">
+        <div class="tot-row">
+          <span class="tot-lbl">Subtotal</span>
+          <span class="tot-val">Bs {{ subtotal | number:'1.2-2' }}</span>
+        </div>
+        <div class="tot-row">
+          <span class="tot-lbl">Descuento</span>
+          <div class="descuento-ctrl">
+            <span class="tot-val-green">− Bs</span>
+            <input type="number" [(ngModel)]="descuento" min="0"
+              class="descuento-input" placeholder="0" />
+          </div>
+        </div>
+        <div class="tot-row tot-total">
+          <span>TOTAL</span>
+          <span class="total-amount">Bs {{ total | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Botón confirmar -->
+      <button class="btn-confirmar" [disabled]="guardando" (click)="confirmarVenta()">
+        <svg fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+          viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M5 12l5 5l10 -10"/>
+        </svg>
+        {{ guardando ? 'Guardando...' : 'Confirmar venta' }}
+      </button>
+
+    </ng-container>
+  </div>
+</ion-content>

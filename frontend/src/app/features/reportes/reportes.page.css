@@ -1,0 +1,143 @@
+.reportes-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--color-candy-bg, #F8FAFC);
+  min-height: 100vh;
+}
+
+.rep-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rep-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-candy-text, #0F172A);
+  margin: 0;
+}
+
+.rep-subtitle {
+  font-size: 13px;
+  color: var(--color-candy-muted, #64748B);
+  margin: 0;
+}
+
+/* TABS */
+.tabs-wrap {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  background: var(--color-candy-surface, #FFFFFF);
+  border: 0.5px solid var(--color-candy-border, #E2E8F0);
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-candy-muted, #64748B);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  background: var(--color-candy-bg, #F8FAFC);
+  color: var(--color-candy-text, #0F172A);
+}
+
+.tab-active {
+  background: #E11D48 !important;
+  color: white !important;
+}
+
+.tab-icon {
+  font-size: 14px;
+}
+
+/* FILTROS BAR */
+.filtros-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--color-candy-surface, #FFFFFF);
+  border: 0.5px solid var(--color-candy-border, #E2E8F0);
+  border-radius: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.spacer { flex: 1; }
+
+.btn-export {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 0.5px solid;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.btn-excel {
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+  border-color: rgba(5, 150, 105, 0.30);
+}
+.btn-excel:hover { background: rgba(5, 150, 105, 0.18); }
+
+.btn-pdf {
+  background: rgba(220, 38, 38, 0.08);
+  color: #DC2626;
+  border-color: rgba(220, 38, 38, 0.30);
+}
+.btn-pdf:hover { background: rgba(220, 38, 38, 0.18); }
+
+.btn-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* BODY */
+.rep-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* DARK MODE */
+:host-context(.dark) .reportes-page {
+  background: var(--color-candy-dark-bg, #0F172A);
+}
+
+:host-context(.dark) .tabs-wrap,
+:host-context(.dark) .filtros-bar {
+  background: var(--color-candy-dark-surface, #1E293B);
+  border-color: var(--color-candy-dark-border, #334155);
+}
+
+:host-context(.dark) .rep-title,
+:host-context(.dark) .tab:hover {
+  color: var(--color-candy-dark-text, #F1F5F9);
+}

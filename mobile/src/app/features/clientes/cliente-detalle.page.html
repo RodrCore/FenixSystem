@@ -1,0 +1,192 @@
+<!-- mobile/src/app/features/clientes/cliente-detalle.page.html -->
+
+<app-navbar titulo="Detalle cliente" [mostrarBack]="true" />
+
+<ion-content [fullscreen]="true">
+  <div class="page-content">
+
+    <!-- Skeleton -->
+    <div *ngIf="loading">
+      <div class="skeleton-row" style="height:80px;margin-bottom:10px"></div>
+      <div class="skeleton-row" style="height:120px;margin-bottom:10px"></div>
+      <div class="skeleton-row" style="height:80px"></div>
+    </div>
+
+    <ng-container *ngIf="!loading && cliente">
+
+      <!-- Header -->
+      <div class="detalle-header">
+        <div class="dh-avatar" [class.inactivo]="cliente.estado !== 'Activo'">
+          {{ initials }}
+        </div>
+        <div class="dh-info">
+          <div class="dh-name">{{ cliente.razon_social }}</div>
+          <div class="dh-biz" *ngIf="cliente.nombre_comercial">{{ cliente.nombre_comercial }}</div>
+          <span class="dh-estado">{{ cliente.estado }}</span>
+        </div>
+        <!-- Botón editar -->
+        <button class="dh-edit-btn" (click)="editar()" *ngIf="puedeEditar"
+          aria-label="Editar cliente">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M7 7h-1a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/>
+            <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97l-8.415 8.385v3h3l8.385-8.415z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Acciones rápidas -->
+      <div class="accion-grid">
+        <button class="accion-btn accion-red" (click)="iniciarVenta()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>Nueva venta</span>
+        </button>
+        <button class="accion-btn accion-green" (click)="llamar()"
+          *ngIf="cliente.contacto_telefono">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5-2.5l5 2v4a2 2 0 0 1-2 2a16 16 0 0 1-15-15a2 2 0 0 1 2-2"/>
+          </svg>
+          <span>Llamar</span>
+        </button>
+        <button class="accion-btn accion-blue" (click)="whatsapp()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9l-5.05.9"/>
+          </svg>
+          <span>WhatsApp</span>
+        </button>
+      </div>
+
+      <!-- Saldo pendiente -->
+      <div class="info-card" *ngIf="tieneDeuda">
+        <div class="ic-header ic-danger">Saldo pendiente</div>
+        <div class="ic-value danger">Bs {{ cliente.saldo_pendiente | number:'1.2-2' }}</div>
+        <div class="ic-sub" *ngIf="cliente.credito_habilitado">
+          Límite: Bs {{ cliente.limite_credito | number:'1.2-2' }} ·
+          {{ cliente.dias_credito }} días
+        </div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="info-card">
+        <div class="ic-header">Contacto</div>
+        <div class="ic-row" *ngIf="cliente.contacto_nombres">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0"/>
+            <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+          </svg>
+          <span>{{ cliente.contacto_nombres }}</span>
+        </div>
+        <div class="ic-row" *ngIf="cliente.contacto_telefono">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5-2.5l5 2v4a2 2 0 0 1-2 2a16 16 0 0 1-15-15a2 2 0 0 1 2-2"/>
+          </svg>
+          <span>{{ cliente.contacto_telefono }}</span>
+        </div>
+        <div class="ic-row" *ngIf="cliente.contacto_whatsapp">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9l-5.05.9"/>
+          </svg>
+          <span>{{ cliente.contacto_whatsapp }}</span>
+        </div>
+        <div class="ic-row" *ngIf="cliente.contacto_email">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+            <path d="M3 7l9 6l9-6"/>
+          </svg>
+          <span>{{ cliente.contacto_email }}</span>
+        </div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="info-card" *ngIf="direccionCompleta">
+        <div class="ic-header">Dirección</div>
+        <div class="ic-row">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/>
+            <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/>
+          </svg>
+          <span>{{ direccionCompleta }}</span>
+        </div>
+        <div class="ic-row" *ngIf="cliente.direccion_referencias">
+          <svg fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+          </svg>
+          <span class="ic-ref">{{ cliente.direccion_referencias }}</span>
+        </div>
+      </div>
+
+      <!-- Datos comerciales -->
+      <div class="info-card">
+        <div class="ic-header">Datos comerciales</div>
+        <div class="ic-kv" *ngIf="cliente.tipo_cliente">
+          <span class="ic-k">Tipo</span>
+          <span class="ic-v">{{ cliente.tipo_cliente }}</span>
+        </div>
+        <div class="ic-kv">
+          <span class="ic-k">Frecuencia</span>
+          <span class="ic-v">
+            {{ cliente.frecuencia_promedio_dias ? 'Cada ' + cliente.frecuencia_promedio_dias + ' días' : '—' }}
+          </span>
+        </div>
+        <div class="ic-kv" *ngIf="cliente.valor_promedio_pedido">
+          <span class="ic-k">Pedido promedio</span>
+          <span class="ic-v">Bs {{ cliente.valor_promedio_pedido | number:'1.2-2' }}</span>
+        </div>
+        <div class="ic-kv">
+          <span class="ic-k">Crédito</span>
+          <span class="ic-v" [style.color]="cliente.credito_habilitado ? '#059669' : '#64748B'">
+            {{ cliente.credito_habilitado ? 'Habilitado' : 'No habilitado' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Últimos pedidos -->
+      <div class="info-card" *ngIf="cliente.pedidos?.length">
+        <div class="ic-header">Últimas compras</div>
+        <div class="vd-prod-row" *ngFor="let p of cliente.pedidos">
+          <div>
+            <div class="vd-prod-name">{{ p.numero }}</div>
+            <div class="vd-prod-pres">{{ p.created_at | date:'dd MMM yyyy':'':'es' }}</div>
+          </div>
+          <div class="vd-prod-price">
+            <div class="vd-sub">Bs {{ p.total | number:'1.2-2' }}</div>
+            <div class="vd-pu" [style.color]="estadoColor(p.estado)">{{ p.estado }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notas internas -->
+      <div class="info-card" *ngIf="cliente.notas_internas">
+        <div class="ic-header">Notas internas</div>
+        <p class="ic-notas">{{ cliente.notas_internas }}</p>
+      </div>
+
+      <!-- Acciones admin -->
+      <div class="vd-acciones">
+        <button class="btn-confirmar" (click)="iniciarVenta()">
+          <svg fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+            viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Crear venta para este cliente
+        </button>
+
+        <button class="btn-cancelar" *ngIf="puedeCambiarEstado" (click)="cambiarEstado()">
+          {{ cliente.estado === 'Activo' ? 'Desactivar cliente' : 'Activar cliente' }}
+        </button>
+      </div>
+
+    </ng-container>
+  </div>
+</ion-content>

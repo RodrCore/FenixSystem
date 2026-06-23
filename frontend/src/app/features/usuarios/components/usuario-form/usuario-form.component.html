@@ -1,0 +1,192 @@
+<!-- Overlay -->
+<div class="modal-backdrop" (click)="cancelar()"></div>
+
+<div class="modal-form">
+  <!-- HEADER -->
+  <div class="mf-header">
+    <div>
+      <div class="mf-title">{{ esEdicion ? 'Editar usuario' : 'Nuevo usuario' }}</div>
+      <div class="mf-sub">
+        {{ esEdicion ? (usuario?.nombres + ' ' + usuario?.apellido_paterno) : 'Crear una nueva cuenta' }}
+      </div>
+    </div>
+    <button class="mf-close" (click)="cancelar()" aria-label="Cerrar">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="18" height="18">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- TABS -->
+  <div class="mf-tabs">
+    <button class="tab" [class.tab-active]="seccionActiva === 'personal'"
+      (click)="irSeccion('personal')">Personal</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'cuenta'"
+      (click)="irSeccion('cuenta')">Cuenta y rol</button>
+    <button class="tab" [class.tab-active]="seccionActiva === 'laboral'"
+      (click)="irSeccion('laboral')">Laboral</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="mf-body" [formGroup]="form">
+
+    <!-- ══ PERSONAL ══ -->
+    <div *ngIf="seccionActiva === 'personal'" class="seccion">
+      <div class="mf-grid-2">
+        <div class="mf-fld">
+          <label>Nombres <span class="req">*</span></label>
+          <input type="text" formControlName="nombres" class="mf-input"
+            placeholder="Juan Carlos" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Apellido paterno <span class="req">*</span></label>
+          <input type="text" formControlName="apellido_paterno" class="mf-input"
+            placeholder="Pérez" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Apellido materno</label>
+          <input type="text" formControlName="apellido_materno" class="mf-input"
+            placeholder="López" />
+        </div>
+
+        <div class="mf-fld">
+          <label>CI / Documento</label>
+          <input type="text" formControlName="ci" class="mf-input"
+            placeholder="12345678" />
+        </div>
+
+        <div class="mf-fld mf-fld-full">
+          <label>Teléfono</label>
+          <input type="tel" formControlName="telefono" class="mf-input"
+            placeholder="71234567" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CUENTA ══ -->
+    <div *ngIf="seccionActiva === 'cuenta'" class="seccion">
+      <div class="mf-grid-2">
+        <div class="mf-fld mf-fld-full">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" formControlName="email" class="mf-input"
+            placeholder="usuario@fenixbd.com" />
+        </div>
+
+        <div class="mf-fld mf-fld-full" *ngIf="!esEdicion">
+          <label class="toggle-row">
+            <input type="checkbox" [checked]="generarPasswordAuto"
+              (change)="togglePasswordAuto($any($event.target).checked)" />
+            <span>Generar contraseña temporal automáticamente</span>
+          </label>
+        </div>
+
+        <div class="mf-fld mf-fld-full" *ngIf="!esEdicion && !generarPasswordAuto">
+          <label>Contraseña</label>
+          <div class="password-input">
+            <input [type]="mostrarPassword ? 'text' : 'password'"
+              formControlName="password" class="mf-input"
+              placeholder="Mínimo 6 caracteres" />
+            <button type="button" class="pwd-toggle"
+              (click)="togglePasswordVisible()" title="Mostrar/ocultar">
+              <svg *ngIf="!mostrarPassword" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                viewBox="0 0 24 24" width="14" height="14">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg *ngIf="mostrarPassword" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                viewBox="0 0 24 24" width="14" height="14">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="mf-fld">
+          <label>Rol <span class="req">*</span></label>
+          <select formControlName="rol_id" class="mf-input">
+            <option [ngValue]="null">— Seleccionar rol —</option>
+            <option *ngFor="let r of rolesDisponibles" [ngValue]="r.id">
+              {{ r.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="mf-fld">
+          <label>Estado</label>
+          <select formControlName="estado" class="mf-input">
+            <option [ngValue]="true">Activo</option>
+            <option [ngValue]="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="info-hint" *ngIf="!esEdicion && generarPasswordAuto">
+        <svg fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" viewBox="0 0 24 24" width="14" height="14">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        Se generará una contraseña temporal de 8 caracteres. El usuario deberá cambiarla
+        en su primer inicio de sesión.
+      </div>
+    </div>
+
+    <!-- ══ LABORAL ══ -->
+    <div *ngIf="seccionActiva === 'laboral'" class="seccion">
+      <div class="mf-grid-2">
+        <div class="mf-fld">
+          <label>N° de empleado</label>
+          <input type="text" formControlName="numero_empleado" class="mf-input"
+            placeholder="EMP-001" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Fecha de contratación</label>
+          <input type="date" formControlName="fecha_contratacion" class="mf-input" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Salario base (Bs)</label>
+          <input type="number" formControlName="salario_base" class="mf-input"
+            min="0" placeholder="2500.00" step="0.01" />
+        </div>
+
+        <div class="mf-fld">
+          <label>Comisión (%)</label>
+          <input type="number" formControlName="comision_porcentaje" class="mf-input"
+            min="0" max="100" placeholder="5" step="0.1" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-msg" *ngIf="errorMsg">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="14" height="14">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      {{ errorMsg }}
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="mf-footer">
+    <button class="btn btn-ghost" (click)="cancelar()" [disabled]="guardando">
+      Cancelar
+    </button>
+    <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+      <svg fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M5 12l5 5l10-10"/>
+      </svg>
+      {{ guardando ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Crear usuario') }}
+    </button>
+  </div>
+</div>

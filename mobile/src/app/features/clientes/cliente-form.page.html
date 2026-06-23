@@ -1,0 +1,334 @@
+<!-- mobile/src/app/features/clientes/cliente-form.page.html -->
+
+<app-navbar [titulo]="titulo" [mostrarBack]="true" />
+
+<ion-content [fullscreen]="true">
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <div class="page-content">
+      <!-- ── SECCIÓN: Datos principales ── -->
+      <div class="form-section">
+        <div class="fs-title">Datos del negocio</div>
+
+        <div class="fld">
+          <label class="flbl"
+            >Razón social / Nombre <span class="req">*</span></label
+          >
+          <input
+            formControlName="razon_social"
+            class="finp"
+            placeholder="Ej: Tienda Don Carlos"
+            [class.finp-err]="hasErr('razon_social')"
+          />
+          <span *ngIf="fieldErr('razon_social')" class="ferr"
+            >{{ fieldErr('razon_social') }}</span
+          >
+        </div>
+
+        <div class="fld">
+          <label class="flbl">Nombre comercial</label>
+          <input
+            formControlName="nombre_comercial"
+            class="finp"
+            placeholder="Nombre con el que se conoce"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="fld">
+            <label class="flbl">NIT / RUC</label>
+            <input
+              formControlName="nit_rfc"
+              class="finp"
+              placeholder="123456789"
+            />
+          </div>
+          <div class="fld">
+            <label class="flbl">Tipo de cliente</label>
+            <select formControlName="tipo_cliente" class="fsel">
+              <option value="">Seleccionar...</option>
+              <option value="Minorista">Minorista</option>
+              <option value="Mayorista">Mayorista</option>
+              <option value="Distribuidor">Distribuidor</option>
+              <option value="Kiosco">Kiosco</option>
+              <option value="Supermercado">Supermercado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECCIÓN: Contacto ── -->
+      <div class="form-section">
+        <div class="fs-title">Contacto</div>
+
+        <div class="fld">
+          <label class="flbl">Nombre del Cliente</label>
+          <input
+            formControlName="contacto_nombres"
+            class="finp"
+            placeholder="Ej: María"
+          />
+        </div>
+
+        <div class="fld">
+          <label class="flbl">Apellido Paterno</label>
+          <input
+            formControlName="contacto_apellido_paterno"
+            class="finp"
+            placeholder="Ej: García"
+          />
+        </div>
+
+        <div class="fld">
+          <label class="flbl">Apellido Materno</label>
+          <input
+            formControlName="contacto_apellido_materno"
+            class="finp"
+            placeholder="Ej: López"
+          />
+        </div>
+
+        <div class="fld">
+          <label class="flbl">Teléfono <span class="req">*</span></label>
+          <input
+            formControlName="contacto_telefono"
+            class="finp"
+            placeholder="+591 7XXXXXXX"
+            type="tel"
+            [class.finp-err]="hasErr('contacto_telefono')"
+          />
+          <span *ngIf="fieldErr('contacto_telefono')" class="ferr">
+            {{ fieldErr('contacto_telefono') }}
+          </span>
+        </div>
+
+        <div class="form-row">
+          <div class="fld">
+            <label class="flbl">WhatsApp</label>
+            <input
+              formControlName="contacto_whatsapp"
+              class="finp"
+              placeholder="+591 7XXXXXXX"
+              type="tel"
+            />
+          </div>
+          <div class="fld">
+            <label class="flbl">Email</label>
+            <input
+              formControlName="contacto_email"
+              class="finp"
+              placeholder="correo@ejemplo.com"
+              type="email"
+              [class.finp-err]="hasErr('contacto_email')"
+            />
+            <span *ngIf="fieldErr('contacto_email')" class="ferr">
+              {{ fieldErr('contacto_email') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECCIÓN: Dirección ── -->
+      <div class="form-section">
+        <div class="fs-title">Dirección de entrega</div>
+
+        <div class="fld">
+          <label class="flbl">Calle / Avenida</label>
+          <input
+            formControlName="direccion_calle"
+            class="finp"
+            placeholder="Ej: Av. Antofagasta"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="fld">
+            <label class="flbl">Número</label>
+            <input
+              formControlName="direccion_numero"
+              class="finp"
+              placeholder="Nro. 123"
+            />
+          </div>
+          <div class="fld">
+            <label class="flbl">Barrio / Zona</label>
+            <input
+              formControlName="direccion_colonia"
+              class="finp"
+              placeholder="Ej: Valle Hermoso"
+            />
+          </div>
+        </div>
+
+        <div class="fld">
+          <label class="flbl">Ciudad</label>
+          <input
+            formControlName="direccion_ciudad"
+            class="finp"
+            placeholder="Ej: Potosí"
+          />
+        </div>
+
+        <div class="fld">
+          <label class="flbl">Referencias de ubicación</label>
+          <input
+            formControlName="direccion_referencias"
+            class="finp"
+            placeholder="Ej: Frente al parque, puerta roja"
+          />
+        </div>
+      </div>
+
+      <!-- ── SECCIÓN: Ubicación en mapa ── -->
+      <div class="form-section">
+        <div class="fs-title">Ubicación exacta</div>
+
+        <!-- Sin ubicación -->
+        <div class="ubicacion-empty" *ngIf="!tieneUbicacion">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            style="color: #cbd5e1"
+            aria-hidden="true"
+          >
+            <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+            <path
+              d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+            />
+          </svg>
+          <p class="ub-txt">Sin ubicación registrada</p>
+          <p class="ub-sub">
+            Agrega la ubicación exacta del negocio para el repartidor
+          </p>
+        </div>
+
+        <!-- Con ubicación -->
+        <div class="ubicacion-preview" *ngIf="tieneUbicacion">
+          <svg
+            fill="none"
+            stroke="#059669"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            aria-hidden="true"
+          >
+            <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+            <path
+              d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+            />
+          </svg>
+          <div class="ub-coords">
+            <span>{{ latitud | number:'1.5-5' }}</span>
+            <span style="color: #94a3b8">·</span>
+            <span>{{ longitud | number:'1.5-5' }}</span>
+          </div>
+          <span class="ub-ok">Ubicación guardada</span>
+        </div>
+
+        <!-- Botón abrir mapa -->
+        <button type="button" class="btn-abrir-mapa" (click)="abrirMapa()">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            aria-hidden="true"
+          >
+            <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0-6 0" />
+            <path
+              d="M17.657 16.657l-4.243 4.243a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
+            />
+          </svg>
+          {{ tieneUbicacion ? 'Cambiar ubicación en mapa' : 'Abrir mapa y marcar
+          ubicación' }}
+        </button>
+      </div>
+
+      <!-- ── SECCIÓN: Crédito ── -->
+      <div class="form-section">
+        <div class="fs-title">Crédito</div>
+
+        <div class="fld-check">
+          <label class="flbl-check">
+            <input
+              type="checkbox"
+              formControlName="credito_habilitado"
+              class="finp-check"
+            />
+            Habilitar crédito para este cliente
+          </label>
+        </div>
+
+        <div class="form-row" *ngIf="form.get('credito_habilitado')?.value">
+          <div class="fld">
+            <label class="flbl">Límite de crédito (Bs)</label>
+            <input
+              formControlName="limite_credito"
+              class="finp"
+              type="number"
+              placeholder="0.00"
+            />
+          </div>
+          <div class="fld">
+            <label class="flbl">Días de crédito</label>
+            <input
+              formControlName="dias_credito"
+              class="finp"
+              type="number"
+              placeholder="30"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECCIÓN: Notas ── -->
+      <div class="form-section">
+        <div class="fs-title">Notas internas</div>
+        <div class="fld">
+          <textarea
+            formControlName="notas_internas"
+            class="finp-area"
+            placeholder="Observaciones, preferencias, horarios especiales..."
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Botón guardar -->
+      <button type="submit" class="btn-confirmar" [disabled]="loading">
+        <svg
+          fill="none"
+          stroke="white"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          aria-hidden="true"
+        >
+          <path d="M5 12l5 5l10-10" />
+        </svg>
+        {{ loading ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Registrar
+        cliente') }}
+      </button>
+    </div>
+  </form>
+  <!-- Mapa pantalla completa -->
+  <app-ubicacion-mapa
+    *ngIf="showMapa"
+    [latInicial]="latitud"
+    [lngInicial]="longitud"
+    (ubicacionSeleccionada)="onUbicacionSeleccionada($event)"
+    (cancelado)="onMapaCancelado()"
+  />
+</ion-content>

@@ -1,0 +1,809 @@
+<!-- mobile/src/app/features/ventas/nueva-venta.page.html -->
+
+<app-navbar [titulo]="tituloPaso" [mostrarBack]="true" />
+
+<ion-content [fullscreen]="true">
+  <div class="page-content">
+    <!-- ── INDICADOR DE PASOS ── -->
+    <div class="pasos-indicator">
+      <div
+        class="paso-item"
+        [class.activo]="paso==='cliente'"
+        [class.completado]="paso!=='cliente'"
+      >
+        <div class="paso-num">1</div>
+        <span class="paso-lbl">Cliente</span>
+      </div>
+      <div
+        class="paso-linea"
+        [class.completado]="paso==='productos'||paso==='carrito'"
+      ></div>
+      <div
+        class="paso-item"
+        [class.activo]="paso==='productos'"
+        [class.completado]="paso==='carrito'"
+      >
+        <div class="paso-num">2</div>
+        <span class="paso-lbl">Productos</span>
+      </div>
+      <div class="paso-linea" [class.completado]="paso==='carrito'"></div>
+      <div class="paso-item" [class.activo]="paso==='carrito'">
+        <div class="paso-num">3</div>
+        <span class="paso-lbl">Confirmar</span>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PASO 1 — ELEGIR CLIENTE
+    ════════════════════════════════ -->
+    <ng-container *ngIf="paso==='cliente'">
+      <div class="search-wrap">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          class="search-icon"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input
+          [formControl]="buscarCliente"
+          placeholder="Buscar cliente..."
+          class="search-input"
+          type="search"
+        />
+      </div>
+
+      <div *ngIf="loadingClientes">
+        <div
+          class="skeleton-row"
+          style="height: 68px; margin-bottom: 8px"
+          *ngFor="let i of [1,2,3,4]"
+        ></div>
+      </div>
+
+      <div *ngIf="!loadingClientes">
+        <div *ngIf="!clientes.length" class="empty-full">
+          <p>Sin clientes</p>
+        </div>
+
+        <div
+          class="cliente-card"
+          *ngFor="let c of clientes"
+          (click)="elegirCliente(c)"
+        >
+          <div class="cl-avatar">{{ initials(c.razon_social) }}</div>
+          <div class="cl-info">
+            <div class="cl-name">{{ c.razon_social }}</div>
+            <div class="cl-biz" *ngIf="c.nombre_comercial">
+              {{ c.nombre_comercial }}
+            </div>
+            <div class="cl-tags">
+              <span class="cl-tag">{{ c.contacto_telefono }}</span>
+              <span class="cl-tag debt" *ngIf="(c.saldo_pendiente??0)>0">
+                Debe Bs {{ c.saldo_pendiente | number:'1.2-2' }}
+              </span>
+              <span class="cl-tag credit" *ngIf="(c.saldo_pendiente??0)===0"
+                >Al día</span
+              >
+            </div>
+          </div>
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            style="color: #cbd5e1; flex-shrink: 0"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ════════════════════════════════
+         PASO 2 — ELEGIR PRODUCTOS
+    ════════════════════════════════ -->
+    <ng-container *ngIf="paso==='productos'">
+      <!-- Cliente seleccionado -->
+      <div class="cliente-seleccionado" *ngIf="clienteSeleccionado">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          aria-hidden="true"
+        >
+          <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+          <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+        </svg>
+        <span>{{ clienteSeleccionado.razon_social }}</span>
+        <button class="cs-cambiar" (click)="paso='cliente'">Cambiar</button>
+      </div>
+
+      <div class="search-wrap">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          class="search-icon"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input
+          [formControl]="buscarProducto"
+          placeholder="Buscar producto..."
+          class="search-input"
+          type="search"
+        />
+      </div>
+
+      <div class="cats-scroll">
+        <button
+          class="cat-chip"
+          [class.active]="categoriaActiva===0"
+          (click)="filtrarCategoria(0)"
+        >
+          Todos
+        </button>
+        <button
+          class="cat-chip"
+          *ngFor="let c of categorias"
+          [class.active]="categoriaActiva===c.id"
+          (click)="filtrarCategoria(c.id)"
+        >
+          {{ c.nombre }}
+        </button>
+      </div>
+
+      <div class="prod-list" *ngIf="loadingProductos">
+        <div
+          class="skeleton-row"
+          style="height: 64px"
+          *ngFor="let i of [1,2,3,4,5]"
+        ></div>
+      </div>
+
+      <div class="prod-list" *ngIf="!loadingProductos">
+        <div
+          class="nv-prod-row"
+          *ngFor="let p of productos"
+          [class.sin-stock]="(p.stock_total??0)===0"
+        >
+          <div class="pr-thumb">
+            <img
+              *ngIf="p.imagen_url"
+              [src]="p.imagen_url"
+              [alt]="p.nombre"
+              loading="lazy"
+            />
+            <svg
+              *ngIf="!p.imagen_url"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              style="color: #cbd5e1"
+              aria-hidden="true"
+            >
+              <path d="M15 8h.01" />
+              <path
+                d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6z"
+              />
+            </svg>
+          </div>
+
+          <div class="pr-info">
+            <div class="pr-nombre">{{ p.nombre }}</div>
+            <div class="pr-cat">{{ p.categoria?.nombre }}</div>
+            <div class="pr-stock">
+              <span
+                class="pr-stock-dot"
+                [style.background]="stockColor(p)"
+              ></span>
+              <span [style.color]="stockColor(p)" style="font-size: 10px">
+                {{ p.stock_total ?? 0 | number }} uds
+              </span>
+            </div>
+          </div>
+
+          <div class="nv-prod-right">
+            <div class="pr-precio" *ngIf="p.presentaciones?.length">
+              Bs {{ p.presentaciones![0].precio_venta | number:'1.2-2' }}
+            </div>
+            <button
+              class="nv-add-btn"
+              [disabled]="(p.stock_total??0)===0"
+              (click)="agregarProducto(p)"
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                aria-hidden="true"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ion-infinite-scroll
+        (ionInfinite)="cargarMasProductos($event)"
+        [disabled]="pageProds >= totalPagesProds"
+      >
+        <ion-infinite-scroll-content
+          loadingText="Cargando..."
+        ></ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    </ng-container>
+
+    <!-- ════════════════════════════════
+         PASO 3 — CARRITO / CONFIRMAR
+    ════════════════════════════════ -->
+    <ng-container *ngIf="paso==='carrito'">
+      <!-- Resumen cliente -->
+      <div class="cliente-seleccionado" *ngIf="clienteSeleccionado">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          aria-hidden="true"
+        >
+          <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+          <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+        </svg>
+        <span>{{ clienteSeleccionado.razon_social }}</span>
+      </div>
+
+      <!-- Items -->
+      <div class="cart-item" *ngFor="let item of items">
+        <div class="ci-thumb">
+          <img
+            *ngIf="item.producto.imagen_url"
+            [src]="item.producto.imagen_url"
+            [alt]="item.producto.nombre"
+          />
+          <svg
+            *ngIf="!item.producto.imagen_url"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            style="color: #cbd5e1"
+            aria-hidden="true"
+          >
+            <path d="M15 8h.01" />
+            <path
+              d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6z"
+            />
+          </svg>
+        </div>
+        <div class="ci-info">
+          <div class="ci-name">{{ item.producto.nombre }}</div>
+          <div class="ci-unit">{{ item.presentacion.nombre }}</div>
+          <div class="ci-ctrl">
+            <button class="ci-btn" (click)="decrementar(item)">−</button>
+            <span class="ci-qty">{{ item.cantidad }}</span>
+            <button class="ci-btn" (click)="incrementar(item)">+</button>
+          </div>
+        </div>
+        <div class="ci-right">
+          <div class="ci-unit-price">
+            Bs {{ item.precio_unit | number:'1.2-2' }}
+          </div>
+          <div class="ci-total">Bs {{ item.total | number:'1.2-2' }}</div>
+          <button class="ci-delete" (click)="quitar(item)" aria-label="Quitar">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="15"
+              height="15"
+              aria-hidden="true"
+            >
+              <path d="M4 7l16 0" />
+              <path d="M10 11l0 6" />
+              <path d="M14 11l0 6" />
+              <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+              <path d="M9 7v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- ── Método de pago ── -->
+      <div class="metodo-pago-section">
+        <div class="vs-title">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="15"
+            height="15"
+            aria-hidden="true"
+          >
+            <rect x="2" y="6" width="20" height="14" rx="2" />
+            <line x1="2" y1="11" x2="22" y2="11" />
+          </svg>
+          Método de pago
+        </div>
+
+        <div class="mp-grid">
+          <button
+            class="mp-btn"
+            [class.activo]="metodoPago === 'Efectivo'"
+            (click)="metodoPago = 'Efectivo'"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+            >
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span>Efectivo</span>
+          </button>
+
+          <button
+            class="mp-btn"
+            [class.activo]="metodoPago === 'Transferencia'"
+            (click)="metodoPago = 'Transferencia'"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+            >
+              <path d="M3 7h14l-3-3" />
+              <path d="M17 7v8a2 2 0 0 1-2 2H3" />
+              <path d="M21 17H7l3 3" />
+              <path d="M7 17v-8a2 2 0 0 1 2-2h12" />
+            </svg>
+            <span>Transferencia</span>
+          </button>
+
+          <button
+            class="mp-btn"
+            [class.activo]="metodoPago === 'Cuenta_Corriente'"
+            (click)="metodoPago = 'Cuenta_Corriente'"
+            [disabled]="!clienteSeleccionado?.credito_habilitado"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+            >
+              <path d="M3 21v-2a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>Crédito</span>
+          </button>
+
+          <button
+            class="mp-btn"
+            [class.activo]="metodoPago === 'Tarjeta'"
+            (click)="metodoPago = 'Tarjeta'"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+            >
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span>Tarjeta</span>
+          </button>
+        </div>
+
+        <!-- Aviso si seleccionó crédito -->
+        <div
+          class="mp-warning"
+          *ngIf="metodoPago === 'Cuenta_Corriente' && clienteSeleccionado"
+        >
+          <svg
+            fill="none"
+            stroke="#D97706"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            aria-hidden="true"
+          >
+            <path
+              d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+            />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <span>
+            Crédito hasta Bs {{ clienteSeleccionado.limite_credito |
+            number:'1.2-2' }} · {{ clienteSeleccionado.dias_credito }} días
+          </span>
+        </div>
+      </div>
+      <!-- ── Repartidor asignado ── -->
+      <div class="repartidor-section">
+        <div class="vs-title">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="15"
+            height="15"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="7" r="4" />
+            <path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2" />
+          </svg>
+          Repartidor asignado
+          <span class="vs-opcional">(opcional)</span>
+        </div>
+
+        <!-- Repartidor seleccionado -->
+        <div class="rep-selected" *ngIf="repartidorSeleccionado">
+          <div class="rep-avatar">
+            {{ initialsRepartidor(repartidorSeleccionado) }}
+          </div>
+          <div class="rep-info">
+            <div class="rep-name">
+              {{ nombreRepartidor(repartidorSeleccionado) }}
+            </div>
+            <div class="rep-tel" *ngIf="repartidorSeleccionado.telefono_movil">
+              {{ repartidorSeleccionado.telefono_movil }}
+            </div>
+          </div>
+          <button
+            class="vs-quitar"
+            (click)="elegirRepartidor(null)"
+            aria-label="Quitar"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Lista de repartidores -->
+        <div class="rep-list" *ngIf="!repartidorSeleccionado">
+          <div *ngIf="loadingRepartidores" class="vs-loading">
+            Cargando repartidores...
+          </div>
+
+          <div
+            *ngIf="!loadingRepartidores && !repartidores.length"
+            class="vs-empty"
+          >
+            Sin repartidores disponibles
+          </div>
+
+          <button
+            class="rep-item"
+            *ngFor="let r of repartidores"
+            (click)="elegirRepartidor(r)"
+          >
+            <div class="rep-avatar-small">{{ initialsRepartidor(r) }}</div>
+            <div class="rep-info">
+              <div class="rep-name">{{ nombreRepartidor(r) }}</div>
+              <div class="rep-tel" *ngIf="r.telefono_movil">
+                {{ r.telefono_movil }}
+              </div>
+            </div>
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              style="color: #cbd5e1"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- ── Selector de vehículo ── -->
+      <div class="vehiculo-section">
+        <div class="vs-title">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="15"
+            height="15"
+            aria-hidden="true"
+          >
+            <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+            <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+            <path
+              d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6-6h15m-6 0v-5"
+            />
+          </svg>
+          Vehículo de entrega
+          <span class="vs-opcional">(opcional)</span>
+        </div>
+
+        <!-- Vehículo seleccionado -->
+        <div class="vs-selected" *ngIf="vehiculoSeleccionado">
+          <div class="vs-info">
+            <div class="vs-matricula">{{ vehiculoSeleccionado.matricula }}</div>
+            <div class="vs-detalle">
+              {{ vehiculoSeleccionado.marca }} {{ vehiculoSeleccionado.modelo }}
+              <span *ngIf="vehiculoSeleccionado.color">
+                · {{ vehiculoSeleccionado.color }}</span
+              >
+            </div>
+          </div>
+          <button
+            class="vs-quitar"
+            (click)="elegirVehiculo(null)"
+            aria-label="Quitar vehículo"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Lista de vehículos -->
+        <div class="vs-list" *ngIf="!vehiculoSeleccionado">
+          <div *ngIf="loadingVehiculos" class="vs-loading">
+            Cargando vehículos...
+          </div>
+
+          <div *ngIf="!loadingVehiculos && !vehiculos.length" class="vs-empty">
+            Sin vehículos registrados
+          </div>
+
+          <button
+            class="vs-item"
+            *ngFor="let v of vehiculos"
+            (click)="elegirVehiculo(v)"
+          >
+            <div class="vs-item-icon">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                aria-hidden="true"
+              >
+                <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+                <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+                <path
+                  d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6-6h15m-6 0v-5"
+                />
+              </svg>
+            </div>
+            <div class="vs-item-info">
+              <div class="vs-item-matricula">{{ v.matricula }}</div>
+              <div class="vs-item-detalle">
+                {{ v.marca }} {{ v.modelo }}
+                <span *ngIf="v.color"> · {{ v.color }}</span>
+                <span *ngIf="v.tipo"> · {{ v.tipo }}</span>
+              </div>
+            </div>
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              style="color: #cbd5e1"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Notas -->
+      <div class="notas-box">
+        <label class="notas-lbl">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            aria-hidden="true"
+          >
+            <path
+              d="M9 5h-2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-2"
+            />
+            <path
+              d="M9 3m0 2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"
+            />
+            <path d="M9 12h6" />
+            <path d="M9 16h6" />
+          </svg>
+          Notas / referencia de entrega
+        </label>
+        <textarea
+          [(ngModel)]="notas"
+          placeholder="Ej: Pared afiches, puerta rejas..."
+          class="notas-input"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <!-- Totales -->
+      <div class="totales-box">
+        <div class="tot-row">
+          <span class="tot-lbl">Subtotal</span>
+          <span class="tot-val">Bs {{ subtotal | number:'1.2-2' }}</span>
+        </div>
+        <div class="tot-row">
+          <span class="tot-lbl">Descuento (Bs)</span>
+          <div class="descuento-ctrl">
+            <span class="tot-val-green">−</span>
+            <input
+              type="number"
+              [(ngModel)]="descuento"
+              min="0"
+              class="descuento-input"
+              placeholder="0"
+            />
+          </div>
+        </div>
+        <div class="tot-row tot-total">
+          <span>TOTAL</span>
+          <span class="total-amount">Bs {{ total | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Botón confirmar -->
+      <button
+        class="btn-confirmar"
+        [disabled]="guardando||!items.length"
+        (click)="confirmarVenta()"
+      >
+        <svg
+          fill="none"
+          stroke="white"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          aria-hidden="true"
+        >
+          <path d="M5 12l5 5l10-10" />
+        </svg>
+        {{ guardando ? 'Guardando...' : 'Confirmar venta' }}
+      </button>
+
+      <button class="btn-volver-prods" (click)="paso='productos'">
+        + Agregar más productos
+      </button>
+    </ng-container>
+  </div>
+</ion-content>
+
+<!-- FAB carrito flotante (visible en paso productos) -->
+<button
+  class="cart-fab"
+  *ngIf="paso==='productos' && cartCount>0"
+  (click)="irACarrito()"
+  aria-label="Ver carrito"
+>
+  <svg
+    fill="none"
+    stroke="white"
+    stroke-width="1.75"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    aria-hidden="true"
+  >
+    <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+    <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0" />
+    <path
+      d="M1 3h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61l1.6-8.39H3.98"
+    />
+  </svg>
+  <span class="cart-fab-count">{{ cartCount }}</span>
+</button>
